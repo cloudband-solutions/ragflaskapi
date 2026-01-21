@@ -1,0 +1,11 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Cors
+python-dotenv
+gunicorn
+pytest
+factory_boy
+psycopg2-binary
+PyYAML
+PyJWT
