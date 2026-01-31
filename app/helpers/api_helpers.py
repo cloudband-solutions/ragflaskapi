@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import jwt
 from flask import current_app
@@ -19,7 +19,7 @@ def build_jwt_header(token):
 
 def generate_jwt(user_object):
     payload = dict(user_object)
-    payload["exp"] = datetime.utcnow() + timedelta(days=60)
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(days=60)
     return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 
 

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export FLASK_ENV=development
+export FLASK_DEBUG=1
+PYTHONPATH=. pytest

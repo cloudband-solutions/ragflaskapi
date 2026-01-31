@@ -10,10 +10,8 @@ from app.controllers.users_controller import (
     update as update_user,
 )
 
-api_bp = Blueprint("/", __name__)
-
-
 def register_routes(app):
+    api_bp = Blueprint("/", __name__)
     api_bp.add_url_rule("/health", view_func=health, methods=["GET"])
     api_bp.add_url_rule("/login", view_func=login_user, methods=["POST"])
     api_bp.add_url_rule("/users", view_func=list_users, methods=["GET"])

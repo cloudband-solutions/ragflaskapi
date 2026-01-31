@@ -66,7 +66,7 @@ def index():
 @authenticate_user
 @authorize_active
 def show(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"message": "not found"}), 404
     return jsonify(user.to_dict())
@@ -93,7 +93,7 @@ def create():
 @authenticate_user
 @authorize_active
 def update(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"message": "not found"}), 404
 
@@ -116,7 +116,7 @@ def update(user_id):
 @authenticate_user
 @authorize_active
 def delete(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if user is None:
         return jsonify({"message": "not found"}), 404
 

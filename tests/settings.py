@@ -12,4 +12,4 @@ class TestConfig:
         "uri", "postgresql+psycopg2://localhost:5432/ragflaskapi_test"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = "test-secret"
+    SECRET_KEY = "test-secret-32-bytes-minimum-key"
