@@ -5,7 +5,6 @@ from flask import g, jsonify, request
 from app.helpers.api_helpers import decode_jwt
 from app.models.user import User
 
-
 def authenticate_user(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
