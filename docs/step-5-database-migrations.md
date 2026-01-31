@@ -1,8 +1,17 @@
-# 5) Database migrations (Flask-Migrate)
+# 5) Database setup and migrations (Flask-Migrate)
+
+## 5.1 Create the database
 ```bash
-export FLASK_APP=wsgi.py
 flask db create
+```
+
+## 5.2 Initialize migrations (first time only)
+```bash
 flask db init
+```
+
+## 5.3 Generate and apply migrations
+```bash
 flask db migrate -m "init"
 flask db upgrade
 ```

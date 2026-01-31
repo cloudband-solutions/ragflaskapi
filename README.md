@@ -9,7 +9,7 @@ new models and controllers.
 - [2) Configure the environment](docs/step-2-configure-environment.md)
 - [3) Run the server](docs/step-3-run-server.md)
 - [4) Run with Gunicorn](docs/step-4-gunicorn.md)
-- [5) Database migrations (Flask-Migrate)](docs/step-5-database-migrations.md)
+- [5) Database setup and migrations (Flask-Migrate)](docs/step-5-database-migrations.md)
 - [6) Tests](docs/step-6-tests.md)
 - [7) Command-line routines (Flask CLI)](docs/step-7-cli.md)
 - [8) Create a new model (example: Project)](docs/step-8-create-model.md)

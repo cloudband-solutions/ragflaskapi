@@ -34,7 +34,6 @@ class ProjectFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 ## 8.3 Create the migration
 ```bash
-export FLASK_APP=wsgi.py
 flask db migrate -m "add project model"
 flask db upgrade
 ```

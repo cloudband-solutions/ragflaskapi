@@ -7,19 +7,31 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 2.2 Set environment variables
-You can export these in your shell or place them in a `.env` file.
+## 2.2 Configure dotenv (.env)
+This project uses `python-dotenv`. Variables in `.env` (and `.flaskenv` if you
+choose to add one) are loaded automatically when the app starts.
 
+Copy the example file and update the values:
 ```bash
-export FLASK_APP=wsgi.py
-export FLASK_ENV=development
-export SECRET_KEY="ragapi-secret"
-export DB_USERNAME=...
-export DB_PASSWORD=...
-export DB_HOST=...
-export DB_PORT=...
-export DB_NAME=ragapi
+cp .env.example .env
 ```
+
+Example `.env`:
+```bash
+FLASK_APP=wsgi.py
+FLASK_ENV=development
+SECRET_KEY="ragapi-secret"
+DB_USERNAME=...
+DB_PASSWORD=...
+DB_HOST=...
+DB_PORT=...
+DB_NAME=ragapi
+# Optional full URI override:
+# DATABASE_URL=postgresql+psycopg2://user:pass@host:5432/ragapi_development
+```
+
+If you prefer to keep Flask CLI variables separate, move `FLASK_APP` and
+`FLASK_ENV` into a `.flaskenv` file instead; it will be loaded as well.
 
 The database config in `database.yaml` uses these environment variables:
 ```yaml

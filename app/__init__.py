@@ -1,10 +1,16 @@
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-load_dotenv()
+_dotenv_path = find_dotenv(".env", usecwd=True)
+if _dotenv_path:
+    load_dotenv(_dotenv_path)
+
+_flaskenv_path = find_dotenv(".flaskenv", usecwd=True)
+if _flaskenv_path:
+    load_dotenv(_flaskenv_path)
 
 db = SQLAlchemy()
 migrate = Migrate()
