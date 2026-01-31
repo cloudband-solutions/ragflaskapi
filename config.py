@@ -3,10 +3,6 @@ from pathlib import Path
 
 import re
 import yaml
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 
 _ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
