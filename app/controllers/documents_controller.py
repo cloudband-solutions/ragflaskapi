@@ -1,12 +1,9 @@
-from uuid import uuid4
-
 from flask import jsonify, request
-from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.controllers.authenticated_controller import authenticate_user, authorize_active
 from app.models.document import Document
-from app.storage import get_storage
+from app.operations.documents.save import Save as SaveDocument
 
 
 ITEMS_PER_PAGE = 20
@@ -19,17 +16,6 @@ def _get_payload():
     if request.form:
         return request.form
     return {}
-
-
-def _file_size(file):
-    try:
-        current = file.stream.tell()
-        file.stream.seek(0, 2)
-        size = file.stream.tell()
-        file.stream.seek(current)
-        return size
-    except (AttributeError, OSError):
-        return None
 
 
 @authenticate_user
@@ -83,48 +69,17 @@ def show(document_id):
 @authorize_active
 def create():
     payload = _get_payload()
-    name = payload.get("name")
-    if not name:
-        return jsonify({"message": "name is required"}), 422
-
-    if Document.query.filter_by(name=name).first() is not None:
-        return jsonify({"message": "name must be unique"}), 422
-
-    upload = request.files.get("file")
-    if upload is None:
-        return jsonify({"message": "file is required"}), 422
-    filename = upload.filename or ""
-    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if extension not in {"txt", "pdf"}:
-        return jsonify({"message": "unsupported file type"}), 422
-
-    storage_key = str(uuid4())
-    content_type = upload.mimetype
-    size_bytes = _file_size(upload)
-    storage = get_storage()
-
-    storage.save(storage_key, upload, content_type=content_type)
-
-    document = Document(
-        name=name,
+    cmd = SaveDocument(
+        name=payload.get("name"),
         description=payload.get("description"),
         document_type=payload.get("document_type"),
-        original_filename=upload.filename or name,
-        storage_key=storage_key,
-        storage_provider="s3",
-        content_type=content_type,
-        size_bytes=size_bytes,
+        upload=request.files.get("file"),
     )
+    cmd.execute()
 
-    try:
-        db.session.add(document)
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        storage.delete(storage_key)
-        return jsonify({"message": "name must be unique"}), 422
-
-    return jsonify(document.to_dict())
+    if cmd.valid():
+        return jsonify(cmd.document.to_dict())
+    return jsonify({"message": cmd.message}), 422
 
 
 @authenticate_user
@@ -135,27 +90,20 @@ def update(document_id):
         return jsonify({"message": "not found"}), 404
 
     payload = _get_payload()
+    cmd = SaveDocument(
+        document=document,
+        name=payload.get("name"),
+        description=payload.get("description"),
+        document_type=payload.get("document_type"),
+        name_present="name" in payload,
+        description_present="description" in payload,
+        document_type_present="document_type" in payload,
+    )
+    cmd.execute()
 
-    if "name" in payload and payload.get("name") != document.name:
-        name = payload.get("name")
-        if not name:
-            return jsonify({"message": "name is required"}), 422
-        if Document.query.filter_by(name=name).first() is not None:
-            return jsonify({"message": "name must be unique"}), 422
-        document.name = name
-
-    if "description" in payload:
-        document.description = payload.get("description")
-    if "document_type" in payload:
-        document.document_type = payload.get("document_type")
-
-    try:
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({"message": "name must be unique"}), 422
-
-    return jsonify(document.to_dict())
+    if cmd.valid():
+        return jsonify(cmd.document.to_dict())
+    return jsonify({"message": cmd.message}), 422
 
 
 @authenticate_user
@@ -165,10 +113,7 @@ def delete(document_id):
     if document is None:
         return jsonify({"message": "not found"}), 404
 
-    storage = get_storage()
-    storage.delete(document.storage_key)
-
-    db.session.delete(document)
-    db.session.commit()
+    cmd = SaveDocument(document=document)
+    cmd.delete()
 
     return jsonify({"message": "ok"})
