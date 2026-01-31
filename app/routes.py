@@ -10,7 +10,7 @@ from app.controllers.users_controller import (
     update as update_user,
 )
 
-api_bp = Blueprint("api", __name__)
+api_bp = Blueprint("/", __name__)
 
 
 def register_routes(app):

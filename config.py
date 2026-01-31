@@ -33,7 +33,7 @@ class Config:
     _db_config = _load_database_config()
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        _db_config.get("uri", "postgresql+psycopg2://localhost:5432/default_flask_api"),
+        _db_config.get("uri", "postgresql+psycopg2://localhost:5432/ragflaskapi"),
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("SECRET_KEY", "default-flask-api-secret")
