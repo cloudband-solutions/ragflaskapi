@@ -37,7 +37,6 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv("SECRET_KEY", "default-flask-api-secret")
-    STORAGE_LOCAL_ROOT = os.getenv("STORAGE_LOCAL_ROOT", "storage")
     AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET", "")
     AWS_REGION = os.getenv("AWS_REGION", "")
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")

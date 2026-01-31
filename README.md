@@ -44,6 +44,7 @@ LocalStack setup for tests:
    - `AWS_SECRET_ACCESS_KEY=test`
 3. Create the test bucket in LocalStack (example):
    - `aws --endpoint-url http://localhost:4566 s3 mb s3://ragflaskapi-test`
+   - Or use `S3_BUCKET_NAME=ragflaskapi-test ./bin/create_dev_s3_bucket.sh`
 
 2. Initialize the database
 

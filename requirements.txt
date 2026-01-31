@@ -10,3 +10,4 @@ psycopg2-binary
 PyYAML
 PyJWT
 boto3
+localstack

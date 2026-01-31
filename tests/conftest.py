@@ -1,4 +1,7 @@
+import os
 import pytest
+
+os.environ.setdefault("FLASK_ENV", "test")
 
 from app import create_app, db
 from app.helpers.api_helpers import build_jwt_header, generate_jwt

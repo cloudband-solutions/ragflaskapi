@@ -1,6 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export FLASK_ENV=development
-export FLASK_DEBUG=1
+if [[ -f .env.test ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env.test
+  set +a
+fi
+
+export FLASK_ENV=test
+export FLASK_DEBUG=0
+
+if [[ -n "${DB_NAME:-}" && -n "${DB_USERNAME:-}" && -n "${DB_HOST:-}" && -n "${DB_PORT:-}" ]]; then
+  TEST_DB_NAME="${DB_NAME}_test"
+  if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST}" -U "${DB_USERNAME}" -p "${DB_PORT}" -lqt \
+    | cut -d \| -f 1 | tr -d ' ' | grep -qw "${TEST_DB_NAME}"; then
+    PGPASSWORD="${DB_PASSWORD:-}" dropdb -h "${DB_HOST}" -U "${DB_USERNAME}" -p "${DB_PORT}" "${TEST_DB_NAME}"
+  fi
+  PGPASSWORD="${DB_PASSWORD:-}" createdb -h "${DB_HOST}" -U "${DB_USERNAME}" -p "${DB_PORT}" "${TEST_DB_NAME}"
+fi
+
+FLASK_APP=wsgi.py flask db upgrade
 PYTHONPATH=. pytest
