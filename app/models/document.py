@@ -24,3 +24,16 @@ class Document(db.Model):
         default=_UTCNOW,
         onupdate=_UTCNOW,
     )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "document_type": self.document_type,
+            "original_filename": self.original_filename,
+            "storage_key": self.storage_key,
+            "storage_provider": self.storage_provider,
+            "content_type": self.content_type,
+            "size_bytes": self.size_bytes,
+        }

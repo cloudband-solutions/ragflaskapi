@@ -11,6 +11,8 @@ fi
 export FLASK_ENV=test
 export FLASK_DEBUG=0
 
+find tests -type d -name "__pycache__" -prune -exec rm -rf {} +
+
 if [[ -n "${DB_NAME:-}" && -n "${DB_USERNAME:-}" && -n "${DB_HOST:-}" && -n "${DB_PORT:-}" ]]; then
   TEST_DB_NAME="${DB_NAME}_test"
   if PGPASSWORD="${DB_PASSWORD:-}" psql -h "${DB_HOST}" -U "${DB_USERNAME}" -p "${DB_PORT}" -lqt \

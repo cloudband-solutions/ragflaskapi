@@ -2,7 +2,7 @@ from app.models.user import User
 
 
 def test_create_user_invalid(client, auth_headers):
-    response = client.post("/api/users", json={}, headers=auth_headers)
+    response = client.post("/users", json={}, headers=auth_headers)
     assert response.status_code == 422
     assert response.json["email"] == ["required"]
     assert response.json["first_name"] == ["required"]
@@ -19,7 +19,7 @@ def test_create_user_valid(client, auth_headers):
         "password": "password",
         "password_confirmation": "password",
     }
-    response = client.post("/api/users", json=payload, headers=auth_headers)
+    response = client.post("/users", json=payload, headers=auth_headers)
     assert response.status_code == 200
     assert response.json["email"] == payload["email"]
     created = User.query.filter_by(email=payload["email"]).first()

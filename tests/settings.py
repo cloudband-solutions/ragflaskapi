@@ -17,5 +17,5 @@ class TestConfig:
     AWS_REGION = os.getenv("AWS_REGION", "")
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
-    AWS_S3_ENDPOINT = os.getenv("AWS_S3_ENDPOINT", "")
+    AWS_S3_ENDPOINT = os.getenv("AWS_S3_ENDPOINT", "http://localhost:4566")
     AWS_S3_PREFIX = os.getenv("AWS_S3_PREFIX", "")
