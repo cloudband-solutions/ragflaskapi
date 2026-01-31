@@ -16,6 +16,10 @@ Copy the example file and update the values:
 cp .env.example .env
 ```
 
+Test-only overrides:
+- If `FLASK_ENV=test`, the app will also load `.env.test` (and override values).
+- Use this for LocalStack credentials/endpoint and test bucket configuration.
+
 Example `.env`:
 ```bash
 FLASK_APP=wsgi.py

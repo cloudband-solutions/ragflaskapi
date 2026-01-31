@@ -3,6 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+import os
 from app.storage import init_storage
 
 _dotenv_path = find_dotenv(".env", usecwd=True)
@@ -12,6 +13,11 @@ if _dotenv_path:
 _flaskenv_path = find_dotenv(".flaskenv", usecwd=True)
 if _flaskenv_path:
     load_dotenv(_flaskenv_path)
+
+if os.getenv("FLASK_ENV") == "test":
+    _env_test_path = find_dotenv(".env.test", usecwd=True)
+    if _env_test_path:
+        load_dotenv(_env_test_path, override=True)
 
 db = SQLAlchemy()
 migrate = Migrate()

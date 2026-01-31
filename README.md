@@ -18,6 +18,10 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
+Test-only overrides:
+- If `FLASK_ENV=test`, the app will also load `.env.test` (and override values).
+- Use this for LocalStack credentials/endpoint and test bucket configuration.
+
 Storage settings:
 - Test, development, and production use Amazon S3 via the AWS variables below.
 - Test should point `AWS_S3_ENDPOINT` to LocalStack (e.g., `http://localhost:4566`).
