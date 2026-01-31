@@ -9,3 +9,4 @@ factory_boy
 psycopg2-binary
 PyYAML
 PyJWT
+boto3

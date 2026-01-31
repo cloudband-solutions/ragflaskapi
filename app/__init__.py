@@ -3,6 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from app.storage import init_storage
 
 _dotenv_path = find_dotenv(".env", usecwd=True)
 if _dotenv_path:
@@ -24,6 +25,7 @@ def create_app(config_object="config.Config"):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    init_storage(app)
 
     from app.routes import register_routes
     from app.cli import register_cli

@@ -28,7 +28,20 @@ DB_PORT=...
 DB_NAME=ragapi
 # Optional full URI override:
 # DATABASE_URL=postgresql+psycopg2://user:pass@host:5432/ragapi_development
+STORAGE_LOCAL_ROOT=storage
+AWS_S3_BUCKET=...
+AWS_REGION=...
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+# Optional S3-compatible endpoint (e.g. localstack):
+AWS_S3_ENDPOINT=
+# Optional prefix inside the bucket:
+AWS_S3_PREFIX=
 ```
+
+Storage adapter selection:
+- Test, development, and production use Amazon S3 via the AWS variables above.
+- In test, set `AWS_S3_ENDPOINT` to a LocalStack endpoint (e.g., `http://localhost:4566`).
 
 If you prefer to keep Flask CLI variables separate, move `FLASK_APP` and
 `FLASK_ENV` into a `.flaskenv` file instead; it will be loaded as well.
