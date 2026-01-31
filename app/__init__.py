@@ -17,7 +17,9 @@ def create_app(config_object="config.Config"):
     migrate.init_app(app, db)
 
     from app.routes import register_routes
+    from app.cli import register_cli
 
     register_routes(app)
+    register_cli(app)
 
     return app
