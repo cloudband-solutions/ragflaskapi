@@ -9,6 +9,7 @@ from app.controllers.documents_controller import (
     show as show_document,
     update as update_document,
 )
+from app.controllers.inquiries_controller import inquire
 from app.controllers.users_controller import (
     create as create_user,
     delete as delete_user,
@@ -37,5 +38,6 @@ def register_routes(app):
     api_bp.add_url_rule(
         "/documents/<string:document_id>", view_func=delete_document, methods=["DELETE"], endpoint="documents_delete"
     )
+    api_bp.add_url_rule("/inquire", view_func=inquire, methods=["POST"], endpoint="inquire")
 
     app.register_blueprint(api_bp)

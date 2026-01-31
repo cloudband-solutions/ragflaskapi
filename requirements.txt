@@ -11,3 +11,7 @@ PyYAML
 PyJWT
 boto3
 localstack
+pgvector
+openai
+pypdf
+tiktoken

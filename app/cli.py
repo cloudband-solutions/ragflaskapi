@@ -1,11 +1,26 @@
 from pathlib import Path
+import io
+import os
 
 import click
 from flask import current_app
 from flask.cli import with_appcontext
 from flask_migrate.cli import db as db_cli
+from openai import OpenAI
+from pypdf import PdfReader
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+import tiktoken
+
+from app import db
+from app.models.document import Document
+from app.models.document_embedding import DocumentEmbedding
+from app.storage import get_storage
+
+
+DEFAULT_CHUNK_TOKENS = 800
+DEFAULT_CHUNK_OVERLAP = 100
+DEFAULT_BATCH_SIZE = 50
 
 
 def register_cli(app):
@@ -18,6 +33,90 @@ def register_cli(app):
     def greet():
         """Print hello world."""
         click.echo("hello world")
+
+    @system.command("openai-embed-document")
+    @click.option("--document-id", required=True)
+    @click.option("--chunk-size", default=DEFAULT_CHUNK_TOKENS, show_default=True, type=int)
+    @click.option(
+        "--chunk-overlap", default=DEFAULT_CHUNK_OVERLAP, show_default=True, type=int
+    )
+    @with_appcontext
+    def openai_embed_document(document_id, chunk_size, chunk_overlap):
+        """Embed a document from storage and save vectors."""
+        use_openai = current_app.config.get("USE_OPENAI", "true")
+        if str(use_openai).lower() not in {"1", "true", "yes", "y"}:
+            raise click.ClickException("USE_OPENAI is disabled; no embedder available.")
+
+        if chunk_size <= 0:
+            raise click.ClickException("--chunk-size must be greater than 0.")
+        if chunk_overlap < 0:
+            raise click.ClickException("--chunk-overlap must be 0 or greater.")
+        if chunk_overlap >= chunk_size:
+            raise click.ClickException("--chunk-overlap must be less than --chunk-size.")
+
+        api_key = current_app.config.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+        model = current_app.config.get("OPENAI_EMBEDDING_MODEL") or os.getenv(
+            "OPENAI_EMBEDDING_MODEL"
+        )
+        if not api_key:
+            raise click.ClickException("OPENAI_API_KEY is required.")
+        if not model:
+            raise click.ClickException("OPENAI_EMBEDDING_MODEL is required.")
+
+        document = db.session.get(Document, document_id)
+        if document is None:
+            raise click.ClickException("Document not found.")
+
+        click.echo(f"Downloading document {document.id}...")
+        data = get_storage().read(document.storage_key)
+        text_content = _extract_text(document, data)
+        if not text_content.strip():
+            raise click.ClickException("No text content extracted from document.")
+
+        encoding = _encoding_for_model(model)
+        tokens = encoding.encode(text_content)
+        chunks = _chunk_tokens(encoding, tokens, chunk_size, chunk_overlap)
+
+        click.echo(f"Total tokens: {len(tokens)}")
+        click.echo(f"Expected chunks: {len(chunks)}")
+
+        existing = (
+            DocumentEmbedding.query.filter_by(document_id=document.id)
+            .delete(synchronize_session=False)
+        )
+        if existing:
+            click.echo(f"Removed existing embeddings: {existing}")
+
+        client = OpenAI(api_key=api_key)
+        created = 0
+        batch = []
+
+        with click.progressbar(chunks, label="Embedding chunks") as chunk_iter:
+            for idx, chunk in enumerate(chunk_iter):
+                response = client.embeddings.create(model=model, input=chunk)
+                embedding = response.data[0].embedding
+
+                batch.append(
+                    DocumentEmbedding(
+                        document_id=document.id,
+                        document_type=document.document_type,
+                        embedding=embedding,
+                        chunk_index=idx,
+                        content=chunk,
+                    )
+                )
+                created += 1
+
+                if len(batch) >= DEFAULT_BATCH_SIZE:
+                    db.session.add_all(batch)
+                    db.session.commit()
+                    batch = []
+
+        if batch:
+            db.session.add_all(batch)
+            db.session.commit()
+
+        click.echo(f"Rows produced: {created}")
 
 
 def _quote_identifier(name):
@@ -70,3 +169,33 @@ def create_db():
             return
         connection.execute(text(f"CREATE DATABASE {_quote_identifier(db_name)}"))
         click.echo(f"Database created: {db_name}")
+
+
+def _extract_text(document, data):
+    filename = (document.original_filename or "").lower()
+    content_type = (document.content_type or "").lower()
+    is_pdf = content_type == "application/pdf" or filename.endswith(".pdf") or data[:4] == b"%PDF"
+
+    if is_pdf:
+        reader = PdfReader(io.BytesIO(data))
+        parts = [page.extract_text() or "" for page in reader.pages]
+        return "\n".join(parts)
+
+    return data.decode("utf-8", errors="ignore")
+
+
+def _encoding_for_model(model):
+    try:
+        return tiktoken.encoding_for_model(model)
+    except KeyError:
+        return tiktoken.get_encoding("cl100k_base")
+
+
+def _chunk_tokens(encoding, tokens, chunk_size, chunk_overlap):
+    if not tokens:
+        return []
+    step = max(chunk_size - chunk_overlap, 1)
+    return [
+        encoding.decode(tokens[i : i + chunk_size])
+        for i in range(0, len(tokens), step)
+    ]
