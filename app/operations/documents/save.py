@@ -69,6 +69,11 @@ class Save(Validator):
             if not self._allowed_extension(self.upload.filename or ""):
                 self._mark_invalid("unsupported file type")
                 return
+        elif self.upload is not None and not self._allowed_extension(
+            self.upload.filename or ""
+        ):
+            self._mark_invalid("unsupported file type")
+            return
         elif self.name_present and self.name != self.document.name:
             if not self.name:
                 self._mark_invalid("name is required")
@@ -110,6 +115,23 @@ class Save(Validator):
             self._mark_invalid("name must be unique")
 
     def _update_document(self):
+        new_storage_key = None
+        old_storage_key = None
+        storage = get_storage()
+
+        if self.upload is not None:
+            new_storage_key = str(uuid4())
+            content_type = self.upload.mimetype
+            size_bytes = self._file_size(self.upload)
+
+            storage.save(new_storage_key, self.upload, content_type=content_type)
+
+            old_storage_key = self.document.storage_key
+            self.document.storage_key = new_storage_key
+            self.document.original_filename = self.upload.filename or self.document.name
+            self.document.content_type = content_type
+            self.document.size_bytes = size_bytes
+
         if self.name_present and self.name != self.document.name:
             self.document.name = self.name
         if self.description_present:
@@ -119,8 +141,12 @@ class Save(Validator):
 
         try:
             db.session.commit()
+            if old_storage_key:
+                storage.delete(old_storage_key)
         except IntegrityError:
             db.session.rollback()
+            if new_storage_key:
+                storage.delete(new_storage_key)
             self._mark_invalid("name must be unique")
 
     def _allowed_extension(self, filename):

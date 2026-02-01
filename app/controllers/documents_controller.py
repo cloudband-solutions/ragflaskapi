@@ -95,6 +95,7 @@ def update(document_id):
         name=payload.get("name"),
         description=payload.get("description"),
         document_type=payload.get("document_type"),
+        upload=request.files.get("file"),
         name_present="name" in payload,
         description_present="description" in payload,
         document_type_present="document_type" in payload,
