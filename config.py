@@ -6,6 +6,18 @@ import yaml
 
 
 _ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
+_DEFAULT_DOCUMENT_TYPES = [
+    "national_budget",
+    "agency_budget",
+    "project_program",
+    "procurement_notice",
+    "audit_report",
+    "development_plan",
+    "local_budget",
+    "legislation_budget_related",
+    "circular_guideline",
+    "performance_report",
+]
 
 
 def _expand_env_vars(value):
@@ -29,6 +41,19 @@ def _load_database_config():
     return {key: _expand_env_vars(value) for key, value in config.items()}
 
 
+def _load_document_types():
+    config_path = Path(os.getenv("DOCUMENT_TYPES_CONFIG", "document_types.yaml"))
+    if not config_path.exists():
+        return list(_DEFAULT_DOCUMENT_TYPES)
+    with config_path.open("r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict) and isinstance(data.get("document_types"), list):
+        return data["document_types"]
+    return list(_DEFAULT_DOCUMENT_TYPES)
+
+
 class Config:
     _db_config = _load_database_config()
     SQLALCHEMY_DATABASE_URI = os.getenv(
@@ -47,3 +72,4 @@ class Config:
     OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
     OPENAI_INFERENCE_MODEL = os.getenv("OPENAI_INFERENCE_MODEL", "")
     USE_OPENAI = os.getenv("USE_OPENAI", "true")
+    DOCUMENT_TYPES = _load_document_types()

@@ -35,9 +35,7 @@ def test_inquire_requires_query_and_document_types(client):
 
 
 def test_inquire_streams_response(client, monkeypatch):
-    monkeypatch.setattr(
-        "app.controllers.inquiries_controller.OpenAI", FakeOpenAI
-    )
+    monkeypatch.setattr("app.operations.inquiries.inquire.OpenAI", FakeOpenAI)
 
     document = DocumentFactory(document_type="policy")
     db.session.add(

@@ -16,6 +16,7 @@ env/
 ENV/
 .env
 .env.*
+document_types.yaml
 
 .ipynb_checkpoints/
 .python-version

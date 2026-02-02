@@ -4,4 +4,12 @@ set -euo pipefail
 export FLASK_ENV=development
 export FLASK_DEBUG=1
 
-exec gunicorn wsgi:app --bind 0.0.0.0:3000 --reload
+mkdir -p log
+
+exec gunicorn wsgi:app \
+  --bind 0.0.0.0:3000 \
+  --reload \
+  --access-logfile - \
+  --error-logfile - \
+  > >(tee -a log/gunicorn_access.log) \
+  2> >(tee -a log/gunicorn_error.log >&2)
