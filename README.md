@@ -145,3 +145,15 @@ If you need to initialize Alembic metadata in a fresh environment:
 ```bash
 docker compose --env-file .env run --rm api flask db init
 ```
+
+To create the default admin user in an ephemeral container:
+
+```bash
+docker compose --env-file .env run --rm api flask system create-admin
+```
+
+Re-run with `--force` to update the user/password:
+
+```bash
+docker compose --env-file .env run --rm api flask system create-admin --force
+```

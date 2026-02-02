@@ -13,8 +13,10 @@ from sqlalchemy.engine import make_url
 import tiktoken
 
 from app import db
+from app.helpers.api_helpers import build_password_hash
 from app.models.document import Document
 from app.models.document_embedding import DocumentEmbedding
+from app.models.user import User
 from app.storage import get_storage
 
 
@@ -33,6 +35,44 @@ def register_cli(app):
     def greet():
         """Print hello world."""
         click.echo("hello world")
+
+    @system.command("create-admin")
+    @click.option("--email", default="admin@example.com", show_default=True)
+    @click.option("--password", default="password", show_default=True)
+    @click.option("--first-name", default="Test", show_default=True)
+    @click.option("--last-name", default="Admin", show_default=True)
+    @click.option(
+        "--force",
+        is_flag=True,
+        help="Update existing user if the email already exists.",
+    )
+    @with_appcontext
+    def create_admin(email, password, first_name, last_name, force):
+        """Create a default admin user."""
+        user = User.query.filter_by(email=email).first()
+        if user is not None and not force:
+            click.echo("Admin user already exists. Use --force to update it.")
+            return
+
+        if user is None:
+            user = User(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password_hash=build_password_hash(password),
+                status="active",
+            )
+            db.session.add(user)
+            db.session.commit()
+            click.echo("Admin user created.")
+            return
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.password_hash = build_password_hash(password)
+        user.status = "active"
+        db.session.commit()
+        click.echo("Admin user updated.")
 
     @system.command("openai-embed-document")
     @click.option("--document-id", required=True)

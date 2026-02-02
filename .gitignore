@@ -26,6 +26,5 @@ build/
 *.egg-info/
 
 INSTRUCTIONS.md
-storage/
 
 log/*
