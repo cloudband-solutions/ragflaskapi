@@ -100,3 +100,48 @@ flask db upgrade
 ```bash
 ./bin/dev
 ```
+
+## Docker Compose (foreground)
+
+Build and run the API + Postgres in the foreground (no `-d`):
+
+```bash
+docker-compose up --build
+```
+
+Stop everything with `Ctrl+C`. If you need to initialize the database inside the
+container, run:
+
+```bash
+docker-compose exec api flask db upgrade
+```
+
+To use a specific env file and keep the container in the foreground:
+
+```bash
+docker compose --env-file .env up --build
+```
+
+The API container runs Gunicorn directly (no `bin/dev`) via the container command.
+
+## One-off DB tasks (ephemeral container)
+
+If you want to run migrations or database setup in a server setting where the
+container is removed after the command finishes, use `docker compose run --rm`:
+
+```bash
+docker compose --env-file .env run --rm api flask db upgrade
+```
+
+To create and apply new migrations:
+
+```bash
+docker compose --env-file .env run --rm api flask db migrate -m "your message"
+docker compose --env-file .env run --rm api flask db upgrade
+```
+
+If you need to initialize Alembic metadata in a fresh environment:
+
+```bash
+docker compose --env-file .env run --rm api flask db init
+```
