@@ -27,3 +27,5 @@ build/
 
 INSTRUCTIONS.md
 storage/
+
+log/*

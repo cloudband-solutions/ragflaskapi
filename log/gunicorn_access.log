@@ -1,4 +1,0 @@
-127.0.0.1 - - [01/Feb/2026:11:30:24 +0800] "OPTIONS /inquire HTTP/1.1" 200 0 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
-127.0.0.1 - - [01/Feb/2026:11:30:28 +0800] "POST /inquire HTTP/1.1" 200 209 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
-127.0.0.1 - - [01/Feb/2026:11:37:28 +0800] "OPTIONS /inquire HTTP/1.1" 200 0 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
-127.0.0.1 - - [01/Feb/2026:11:37:33 +0800] "POST /inquire HTTP/1.1" 200 186 "http://localhost:8000/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36"
