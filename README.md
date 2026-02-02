@@ -34,6 +34,40 @@ Required environment variables for S3:
 - Optional: `AWS_S3_ENDPOINT` (S3-compatible endpoints)
 - Optional: `AWS_S3_PREFIX` (key prefix inside the bucket)
 
+## PostgreSQL (Docker)
+
+Use a local PostgreSQL container and point the app at it via `DB_*` or `DATABASE_URL`.
+
+1. Start a Postgres container:
+
+```bash
+docker run --name ragflaskapi-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=ragflaskapi_development \
+  -p 5432:5432 \
+  -d postgres:15
+```
+
+2. Update `.env` to match the container:
+
+```bash
+DB_NAME=ragflaskapi
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+This maps to `database.yaml` and becomes:
+`postgresql+psycopg2://postgres:postgres@localhost:5432/ragflaskapi_development`.
+
+Optional: use a full URI instead of components:
+
+```bash
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ragflaskapi_development
+```
+
 LocalStack setup for tests:
 1. Run LocalStack with S3 enabled (defaults to `http://localhost:4566`).
 2. Export test env vars (example values):
