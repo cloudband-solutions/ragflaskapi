@@ -3,6 +3,7 @@ from flask import jsonify, request
 from app import db
 from app.controllers.authenticated_controller import authenticate_user, authorize_active
 from app.models.document import Document
+from app.models.document_embedding import DocumentEmbedding
 from app.operations.documents.save import Save as SaveDocument
 from app.storage import get_storage
 
@@ -19,7 +20,7 @@ def _get_payload():
     return {}
 
 
-def _public_document_payload(document):
+def _public_document_payload(document, has_embeddings=False):
     return {
         "id": document.id,
         "name": document.name,
@@ -29,7 +30,21 @@ def _public_document_payload(document):
         "content_type": document.content_type,
         "size_bytes": document.size_bytes,
         "download_url": get_storage().url(document.storage_key),
+        "has_embeddings": has_embeddings,
     }
+
+
+def _document_embedding_ids(documents):
+    ids = [document.id for document in documents]
+    if not ids:
+        return set()
+    rows = (
+        db.session.query(DocumentEmbedding.document_id)
+        .filter(DocumentEmbedding.document_id.in_(ids))
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows}
 
 
 def public_index():
@@ -55,7 +70,11 @@ def public_index():
         else []
     )
 
-    records = [_public_document_payload(document) for document in documents]
+    embedding_ids = _document_embedding_ids(documents)
+    records = [
+        _public_document_payload(document, document.id in embedding_ids)
+        for document in documents
+    ]
 
     return jsonify(
         {
@@ -93,7 +112,11 @@ def index():
         else []
     )
 
-    records = [document.to_dict() for document in documents]
+    embedding_ids = _document_embedding_ids(documents)
+    records = [
+        {**document.to_dict(), "has_embeddings": document.id in embedding_ids}
+        for document in documents
+    ]
 
     return jsonify(
         {
