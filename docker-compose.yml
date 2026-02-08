@@ -7,6 +7,8 @@ services:
       - "9000:3000"
     env_file:
       - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       FLASK_APP: wsgi.py
       FLASK_ENV: development
