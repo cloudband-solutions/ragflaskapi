@@ -110,6 +110,28 @@ Verify the container is healthy:
 curl http://localhost:8000/health
 ```
 
+## Docker deploy (from scratch)
+
+1) Build the images:
+```bash
+docker compose build
+```
+
+2) Start the services:
+```bash
+docker compose up -d
+```
+
+3) Create the database (one-off container):
+```bash
+docker compose --env-file .env run --rm api flask db create
+```
+
+4) Apply migrations:
+```bash
+docker compose --env-file .env run --rm api flask db upgrade
+```
+
 ## One-off DB tasks (ephemeral container)
 
 Apply migrations:
