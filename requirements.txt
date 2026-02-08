@@ -15,3 +15,5 @@ pgvector
 openai
 pypdf
 tiktoken
+openpyxl
+python-pptx

@@ -4,6 +4,7 @@ from app import db
 from app.controllers.authenticated_controller import authenticate_user, authorize_active
 from app.models.document import Document
 from app.operations.documents.save import Save as SaveDocument
+from app.storage import get_storage
 
 
 ITEMS_PER_PAGE = 20
@@ -16,6 +17,55 @@ def _get_payload():
     if request.form:
         return request.form
     return {}
+
+
+def _public_document_payload(document):
+    return {
+        "id": document.id,
+        "name": document.name,
+        "description": document.description,
+        "document_type": document.document_type,
+        "original_filename": document.original_filename,
+        "content_type": document.content_type,
+        "size_bytes": document.size_bytes,
+        "download_url": get_storage().url(document.storage_key),
+    }
+
+
+def public_index():
+    documents_query = Document.query.order_by(Document.created_at.desc())
+
+    query = request.args.get("query")
+    if query:
+        pattern = f"%{query}%"
+        documents_query = documents_query.filter(Document.name.ilike(pattern))
+
+    document_type = request.args.get("document_type")
+    if document_type:
+        documents_query = documents_query.filter_by(document_type=document_type)
+
+    page = request.args.get("page", type=int) or 1
+    per_page = request.args.get("per_page", type=int) or ITEMS_PER_PAGE
+    total = documents_query.count()
+    total_pages = max((total + per_page - 1) // per_page, 1)
+
+    documents = (
+        documents_query.offset((page - 1) * per_page).limit(per_page).all()
+        if total > 0
+        else []
+    )
+
+    records = [_public_document_payload(document) for document in documents]
+
+    return jsonify(
+        {
+            "records": records,
+            "total_pages": total_pages,
+            "current_page": page,
+            "next_page": page + 1 if page < total_pages else None,
+            "prev_page": page - 1 if page > 1 else None,
+        }
+    )
 
 
 @authenticate_user

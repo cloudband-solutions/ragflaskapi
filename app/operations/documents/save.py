@@ -8,7 +8,7 @@ from app.operations.validator import Validator
 from app.storage import get_storage
 
 
-ALLOWED_EXTENSIONS = {"pdf", "txt"}
+ALLOWED_EXTENSIONS = {"pdf", "txt", "xlsx", "pptx"}
 
 
 class Save(Validator):

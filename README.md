@@ -1,10 +1,10 @@
 # RAG Flask API
 
-A Retrieval Augmented Generation engine in Flask.
+A Retrieval Augmented Generation API built with Flask.
 
-## Dev Setup
+## Quick start (local dev)
 
-0. (Optional) Create your python environment and install packages.
+1) Create a virtualenv and install deps:
 
 ```bash
 python -m venv env
@@ -12,33 +12,13 @@ source env/bin/activate
 pip install -r requirements.txt
 ```
 
-1. Create `.env` file and modify values accordingly.
+2) Create your environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Test-only overrides:
-- If `FLASK_ENV=test`, the app will also load `.env.test` (and override values).
-- Use this for LocalStack credentials/endpoint and test bucket configuration.
-
-Storage settings:
-- Test, development, and production use Amazon S3 via the AWS variables below.
-- Test should point `AWS_S3_ENDPOINT` to LocalStack (e.g., `http://localhost:4566`).
-
-Required environment variables for S3:
-- `AWS_S3_BUCKET`
-- `AWS_REGION`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- Optional: `AWS_S3_ENDPOINT` (S3-compatible endpoints)
-- Optional: `AWS_S3_PREFIX` (key prefix inside the bucket)
-
-## PostgreSQL (Docker)
-
-Use a local PostgreSQL container and point the app at it via `DB_*` or `DATABASE_URL`.
-
-1. Start a Postgres container:
+3) Start Postgres (Docker):
 
 ```bash
 docker run --name ragflaskapi-postgres \
@@ -49,7 +29,7 @@ docker run --name ragflaskapi-postgres \
   -d postgres:15
 ```
 
-2. Update `.env` to match the container:
+4) Point the app at the DB in `.env`:
 
 ```bash
 DB_NAME=ragflaskapi
@@ -59,101 +39,96 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-This maps to `database.yaml` and becomes:
-`postgresql+psycopg2://postgres:postgres@localhost:5432/ragflaskapi_development`.
-
-Optional: use a full URI instead of components:
-
-```bash
-DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ragflaskapi_development
-```
-
-LocalStack setup for tests:
-1. Run LocalStack with S3 enabled (defaults to `http://localhost:4566`).
-2. Export test env vars (example values):
-   - `AWS_S3_ENDPOINT=http://localhost:4566`
-   - `AWS_S3_BUCKET=ragflaskapi-test`
-   - `AWS_REGION=us-east-1`
-   - `AWS_ACCESS_KEY_ID=test`
-   - `AWS_SECRET_ACCESS_KEY=test`
-3. Create the test bucket in LocalStack (example):
-   - `aws --endpoint-url http://localhost:4566 s3 mb s3://ragflaskapi-test`
-   - Or use `S3_BUCKET_NAME=ragflaskapi-test ./bin/create_dev_s3_bucket.sh`
-
-2. Initialize the database
+5) Initialize the database and run the server:
 
 ```bash
 flask db create
 flask db init
 flask db migrate -m "init"
 flask db upgrade
+
+./bin/dev
 ```
 
-2. Run tests:
+## Essential configuration
 
+Environment file:
+- Base config lives in `.env`.
+- If `FLASK_ENV=test`, `.env.test` is loaded and overrides values.
+
+Storage (S3 or S3-compatible):
+- Required: `AWS_S3_BUCKET`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- Optional: `AWS_S3_ENDPOINT`, `AWS_S3_PREFIX`
+
+Database:
+- Use `DB_*` values or a full `DATABASE_URL`.
+- The default mapping follows `database.yaml`.
+
+OpenAI embeddings:
+- Required: `OPENAI_API_KEY`
+- Optional: `OPENAI_EMBEDDING_MODEL` (default `text-embedding-3-small`)
+- Optional: `USE_OPENAI` (default `true`)
+
+## Common workflows
+
+Run tests:
 ```bash
 ./bin/test
 ```
 
-3. Run the server:
-
+Create an admin user:
 ```bash
-./bin/dev
+flask --app wsgi.py system create-admin
+```
+
+Embed a document into `document_embeddings`:
+```bash
+flask --app wsgi.py system openai-embed-document --document-id <uuid>
 ```
 
 ## Docker Compose (foreground)
 
-Build and run the API + Postgres in the foreground (no `-d`):
-
+Run API + Postgres in the foreground:
 ```bash
 docker-compose up --build
 ```
 
-Stop everything with `Ctrl+C`. If you need to initialize the database inside the
-container, run:
-
+Initialize the DB inside the container:
 ```bash
 docker-compose exec api flask db upgrade
 ```
 
-To use a specific env file and keep the container in the foreground:
-
+Use a specific env file:
 ```bash
 docker compose --env-file .env up --build
 ```
 
-The API container runs Gunicorn directly (no `bin/dev`) via the container command.
+The API container runs Gunicorn directly (no `./bin/dev`).
 
 ## One-off DB tasks (ephemeral container)
 
-If you want to run migrations or database setup in a server setting where the
-container is removed after the command finishes, use `docker compose run --rm`:
-
+Apply migrations:
 ```bash
 docker compose --env-file .env run --rm api flask db upgrade
 ```
 
-To create and apply new migrations:
-
+Create/apply migrations:
 ```bash
 docker compose --env-file .env run --rm api flask db migrate -m "your message"
 docker compose --env-file .env run --rm api flask db upgrade
 ```
 
-If you need to initialize Alembic metadata in a fresh environment:
-
+Initialize Alembic metadata:
 ```bash
 docker compose --env-file .env run --rm api flask db init
 ```
 
-To create the default admin user in an ephemeral container:
-
+Create/update default admin user:
 ```bash
 docker compose --env-file .env run --rm api flask system create-admin
-```
-
-Re-run with `--force` to update the user/password:
-
-```bash
 docker compose --env-file .env run --rm api flask system create-admin --force
 ```
+
+## Documentation
+
+Start here: `docs/README.md`.

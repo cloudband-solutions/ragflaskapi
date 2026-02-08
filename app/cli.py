@@ -214,11 +214,57 @@ def create_db():
 def _extract_text(document, data):
     filename = (document.original_filename or "").lower()
     content_type = (document.content_type or "").lower()
-    is_pdf = content_type == "application/pdf" or filename.endswith(".pdf") or data[:4] == b"%PDF"
+    is_pdf = (
+        content_type == "application/pdf"
+        or filename.endswith(".pdf")
+        or data[:4] == b"%PDF"
+    )
+    is_excel = (
+        content_type
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        or filename.endswith(".xlsx")
+    )
+    is_powerpoint = (
+        content_type
+        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        or filename.endswith(".pptx")
+    )
 
     if is_pdf:
         reader = PdfReader(io.BytesIO(data))
         parts = [page.extract_text() or "" for page in reader.pages]
+        return "\n".join(parts)
+
+    if is_excel:
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
+        parts = []
+        for sheet in workbook.worksheets:
+            parts.append(f"# Sheet: {sheet.title}")
+            for row in sheet.iter_rows(values_only=True):
+                row_values = [str(value) for value in row if value is not None]
+                if row_values:
+                    parts.append("\t".join(row_values))
+        return "\n".join(parts)
+
+    if is_powerpoint:
+        from pptx import Presentation
+
+        presentation = Presentation(io.BytesIO(data))
+        parts = []
+        for slide_index, slide in enumerate(presentation.slides, start=1):
+            parts.append(f"# Slide {slide_index}")
+            for shape in slide.shapes:
+                if getattr(shape, "has_text_frame", False) and shape.text:
+                    parts.append(shape.text)
+                if getattr(shape, "has_table", False):
+                    for row in shape.table.rows:
+                        row_values = [
+                            cell.text for cell in row.cells if cell.text
+                        ]
+                        if row_values:
+                            parts.append("\t".join(row_values))
         return "\n".join(parts)
 
     return data.decode("utf-8", errors="ignore")

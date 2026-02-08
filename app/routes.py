@@ -6,6 +6,7 @@ from app.controllers.documents_controller import (
     create as create_document,
     delete as delete_document,
     index as list_documents,
+    public_index as public_list_documents,
     show as show_document,
     update as update_document,
 )
@@ -28,6 +29,7 @@ def register_routes(app):
     api_bp.add_url_rule("/users/<string:user_id>", view_func=update_user, methods=["PUT"], endpoint="users_update")
     api_bp.add_url_rule("/users/<string:user_id>", view_func=delete_user, methods=["DELETE"], endpoint="users_delete")
     api_bp.add_url_rule("/documents", view_func=list_documents, methods=["GET"], endpoint="documents_index")
+    api_bp.add_url_rule("/public/documents", view_func=public_list_documents, methods=["GET"], endpoint="public_documents_index")
     api_bp.add_url_rule("/documents", view_func=create_document, methods=["POST"], endpoint="documents_create")
     api_bp.add_url_rule(
         "/documents/<string:document_id>", view_func=show_document, methods=["GET"], endpoint="documents_show"

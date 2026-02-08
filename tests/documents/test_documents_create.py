@@ -78,3 +78,27 @@ def test_create_document_accepts_txt(client, auth_headers):
     )
     assert response.status_code == 200
     assert response.json["name"] == payload["name"]
+
+
+def test_create_document_accepts_xlsx(client, auth_headers):
+    payload = {
+        "name": "Doc 4",
+        "file": (io.BytesIO(b"excel"), "doc4.xlsx"),
+    }
+    response = client.post(
+        "/documents", data=payload, headers=auth_headers, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["name"] == payload["name"]
+
+
+def test_create_document_accepts_pptx(client, auth_headers):
+    payload = {
+        "name": "Doc 5",
+        "file": (io.BytesIO(b"ppt"), "doc5.pptx"),
+    }
+    response = client.post(
+        "/documents", data=payload, headers=auth_headers, content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["name"] == payload["name"]

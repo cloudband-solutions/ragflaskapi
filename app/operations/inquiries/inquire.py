@@ -1,3 +1,4 @@
+import logging
 import os
 
 from openai import OpenAI
@@ -57,6 +58,8 @@ class Inquire(Validator):
             model=embedding_model, input=self.query
         )
         query_embedding = embedding_response.data[0].embedding
+        LOGGER.info("Inquiry embedding: %s", query_embedding)
+        print(f"Inquiry embedding: {query_embedding}")
 
         embeddings_query = DocumentEmbedding.query.filter(
             DocumentEmbedding.document_type.in_(self.document_types)
@@ -137,3 +140,4 @@ class Inquire(Validator):
             self.payload["invalid_types"] = invalid_types
         self.status_code = status_code
         self.num_errors = 1
+LOGGER = logging.getLogger(__name__)
