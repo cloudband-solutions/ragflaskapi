@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import current_app, jsonify, request
 
 from app import db
 from app.controllers.authenticated_controller import authenticate_user, authorize_active
@@ -47,6 +47,19 @@ def _document_embedding_ids(documents):
     return {row[0] for row in rows}
 
 
+def _available_document_types():
+    allowed_types = set(current_app.config.get("DOCUMENT_TYPES") or [])
+    query = (
+        db.session.query(Document.document_type)
+        .filter(Document.document_type.isnot(None))
+        .filter(Document.document_type != "")
+    )
+    if allowed_types:
+        query = query.filter(Document.document_type.in_(allowed_types))
+    rows = query.distinct().order_by(Document.document_type.asc()).all()
+    return [row[0] for row in rows]
+
+
 def public_index():
     documents_query = Document.query.order_by(Document.created_at.desc())
 
@@ -85,6 +98,10 @@ def public_index():
             "prev_page": page - 1 if page > 1 else None,
         }
     )
+
+
+def public_document_types():
+    return jsonify({"document_types": _available_document_types()})
 
 
 @authenticate_user

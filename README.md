@@ -105,6 +105,11 @@ docker compose --env-file .env up --build
 
 The API container runs Gunicorn directly (no `./bin/dev`).
 
+Verify the container is healthy:
+```bash
+curl http://localhost:8000/health
+```
+
 ## One-off DB tasks (ephemeral container)
 
 Apply migrations:

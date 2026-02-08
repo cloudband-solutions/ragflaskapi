@@ -34,3 +34,14 @@ def test_list_documents_includes_embeddings_flag(client, auth_headers):
         record_id for record_id in record_by_id.keys() if record_id != document.id
     )
     assert record_by_id[other_id]["has_embeddings"] is False
+
+
+def test_public_document_types_only_includes_available(client):
+    DocumentFactory(document_type="national_budget")
+    DocumentFactory(document_type="audit_report")
+    DocumentFactory(document_type=None)
+    DocumentFactory(document_type="")
+
+    response = client.get("/public/document_types")
+    assert response.status_code == 200
+    assert response.json["document_types"] == ["audit_report", "national_budget"]
