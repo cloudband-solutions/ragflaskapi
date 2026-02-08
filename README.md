@@ -86,6 +86,11 @@ Embed a document into `document_embeddings`:
 flask --app wsgi.py system openai-embed-document --document-id <uuid>
 ```
 
+Embed a document via Docker:
+```bash
+docker-compose exec api flask --app wsgi.py system openai-embed-document --document-id <uuid>
+```
+
 ## Docker Compose (foreground)
 
 Run API + Postgres in the foreground:
