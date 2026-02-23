@@ -91,6 +91,52 @@ Embed a document via Docker:
 docker-compose exec api flask --app wsgi.py system openai-embed-document --document-id <uuid>
 ```
 
+## SQS embedding worker
+
+Runs a long-lived worker that polls SQS, downloads S3 objects, and writes
+embeddings. It accepts either S3 event payloads or `{ bucket, key }` /
+`{ document_id, name, key }` payloads.
+
+Required environment variables (worker):
+- `SQS_QUEUE_URL` (or pass `--queue-url`)
+- `AWS_S3_BUCKET`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+
+Optional:
+- `AWS_SQS_ENDPOINT` (e.g., localstack)
+- `SQS_REGION` (defaults to `AWS_REGION`)
+
+### OpenAI embeddings
+
+Required:
+- `OPENAI_API_KEY`
+
+Optional:
+- `OPENAI_EMBEDDING_MODEL` (default `text-embedding-3-small`)
+- `USE_OPENAI` (default `true`)
+
+Run the worker:
+```bash
+flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url> --embedder openai
+```
+
+### Local (GGUF) embeddings
+
+Required:
+- `LOCAL_EMBEDDING_MODEL_PATH` (full path to a `.gguf` file)
+
+Optional:
+- `LOCAL_EMBEDDING_N_CTX` (default `2048`)
+- `LOCAL_EMBEDDING_N_THREADS` (default `4`)
+- `LOCAL_EMBEDDING_N_BATCH` (default `64`)
+
+Run the worker:
+```bash
+flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url> --embedder local
+```
+
 ## Docker Compose (foreground)
 
 Run API + Postgres in the foreground:
