@@ -1,13 +1,15 @@
 from functools import wraps
 
-from flask import current_app, jsonify, request
+from flask import current_app, jsonify, request, g
 
 from app import db
 from app.controllers.authenticated_controller import (
     authenticate_user,
+    authenticate_user_optional,
     authorize_active,
     authorize_admin,
 )
+from sqlalchemy import false
 from app.models.document import Document
 from app.models.document_embedding import DocumentEmbedding
 from app.operations.documents.save import Save as SaveDocument
@@ -81,13 +83,32 @@ def _maybe_authenticate_public_documents(func):
     def wrapper(*args, **kwargs):
         if _authenticate_public_documents_enabled():
             return authenticate_user(authorize_active(func))(*args, **kwargs)
-        return func(*args, **kwargs)
+        return authenticate_user_optional(func)(*args, **kwargs)
 
     return wrapper
 
 
+def _allowed_document_types_for_user(user):
+    allowed_types = current_app.config.get("DOCUMENT_TYPES") or []
+    if user is None:
+        return allowed_types
+    return user.allowed_document_types(allowed_types)
+
+
+def _apply_user_document_type_filter(query, user):
+    allowed_types = _allowed_document_types_for_user(user)
+    if allowed_types is None:
+        return query
+    if allowed_types:
+        return query.filter(Document.document_type.in_(allowed_types))
+    return query.filter(false())
+
+
+@_maybe_authenticate_public_documents
 def public_index():
     documents_query = Document.query.order_by(Document.created_at.desc())
+    user = getattr(g, "current_user", None)
+    documents_query = _apply_user_document_type_filter(documents_query, user)
 
     query = request.args.get("query")
     if query:
@@ -130,8 +151,31 @@ def public_index():
     )
 
 
+@_maybe_authenticate_public_documents
 def public_document_types():
-    return jsonify({"document_types": _available_document_types()})
+    user = getattr(g, "current_user", None)
+    return jsonify({"document_types": _allowed_document_types_for_user(user)})
+
+
+@_maybe_authenticate_public_documents
+def public_show(document_id):
+    document = db.session.get(Document, document_id)
+    if document is None:
+        return jsonify({"message": "not found"}), 404
+    user = getattr(g, "current_user", None)
+    allowed_types = _allowed_document_types_for_user(user)
+    if allowed_types is not None and allowed_types:
+        if document.document_type not in allowed_types:
+            return jsonify({"message": "unauthorized"}), 403
+    elif allowed_types == []:
+        return jsonify({"message": "unauthorized"}), 403
+    has_embeddings = (
+        db.session.query(DocumentEmbedding.document_id)
+        .filter(DocumentEmbedding.document_id == document.id)
+        .first()
+        is not None
+    )
+    return jsonify(_public_document_payload(document, has_embeddings))
 
 
 @authenticate_user

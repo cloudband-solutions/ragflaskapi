@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import current_app, jsonify, request
 from sqlalchemy import or_
 
 from app import db
@@ -89,6 +89,9 @@ def create():
         last_name=payload.get("last_name"),
         password=payload.get("password"),
         password_confirmation=payload.get("password_confirmation"),
+        user_type=payload.get("user_type"),
+        document_types=payload.get("document_types"),
+        allowed_document_types=current_app.config.get("DOCUMENT_TYPES") or [],
     )
     cmd.execute()
 
@@ -113,6 +116,9 @@ def update(user_id):
         last_name=payload.get("last_name"),
         password=payload.get("password"),
         password_confirmation=payload.get("password_confirmation"),
+        user_type=payload.get("user_type"),
+        document_types=payload.get("document_types"),
+        allowed_document_types=current_app.config.get("DOCUMENT_TYPES") or [],
     )
     cmd.execute()
 

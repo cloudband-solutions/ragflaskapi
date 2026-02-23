@@ -323,6 +323,7 @@ def register_cli(app):
     def create_admin(email, password, first_name, last_name, force):
         """Create a default admin user."""
         user = User.query.filter_by(email=email).first()
+        document_types = current_app.config.get("DOCUMENT_TYPES") or []
         if user is not None and not force:
             click.echo("Admin user already exists. Use --force to update it.")
             return
@@ -335,6 +336,7 @@ def register_cli(app):
                 password_hash=build_password_hash(password),
                 status="active",
                 user_type="admin",
+                document_types=document_types,
             )
             db.session.add(user)
             db.session.commit()
@@ -346,6 +348,7 @@ def register_cli(app):
         user.password_hash = build_password_hash(password)
         user.status = "active"
         user.user_type = "admin"
+        user.document_types = document_types
         db.session.commit()
         click.echo("Admin user updated.")
 
@@ -363,6 +366,7 @@ def register_cli(app):
     def create_user(email, password, first_name, last_name, force):
         """Create a default sample user."""
         user = User.query.filter_by(email=email).first()
+        document_types = current_app.config.get("DOCUMENT_TYPES") or []
         if user is not None and not force:
             click.echo("User already exists. Use --force to update it.")
             return
@@ -375,6 +379,7 @@ def register_cli(app):
                 password_hash=build_password_hash(password),
                 status="active",
                 user_type="user",
+                document_types=document_types,
             )
             db.session.add(user)
             db.session.commit()
@@ -386,8 +391,52 @@ def register_cli(app):
         user.password_hash = build_password_hash(password)
         user.status = "active"
         user.user_type = "user"
+        user.document_types = document_types
         db.session.commit()
         click.echo("User updated.")
+
+    @system.command("create-ops")
+    @click.option("--email", default="ops@example.com", show_default=True)
+    @click.option("--password", default="password", show_default=True)
+    @click.option("--first-name", default="Sample", show_default=True)
+    @click.option("--last-name", default="Ops", show_default=True)
+    @click.option(
+        "--force",
+        is_flag=True,
+        help="Update existing user if the email already exists.",
+    )
+    @with_appcontext
+    def create_ops(email, password, first_name, last_name, force):
+        """Create a default ops user."""
+        user = User.query.filter_by(email=email).first()
+        document_types = current_app.config.get("DOCUMENT_TYPES") or []
+        if user is not None and not force:
+            click.echo("Ops user already exists. Use --force to update it.")
+            return
+
+        if user is None:
+            user = User(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password_hash=build_password_hash(password),
+                status="active",
+                user_type="ops",
+                document_types=document_types,
+            )
+            db.session.add(user)
+            db.session.commit()
+            click.echo("Ops user created.")
+            return
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.password_hash = build_password_hash(password)
+        user.status = "active"
+        user.user_type = "ops"
+        user.document_types = document_types
+        db.session.commit()
+        click.echo("Ops user updated.")
 
     @system.command("openai-embed-document")
     @click.option("--document-id", required=True)

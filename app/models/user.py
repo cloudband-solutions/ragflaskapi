@@ -15,6 +15,7 @@ class User(db.Model):
     last_name = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), nullable=False, default="pending")
     user_type = db.Column(db.String(50), nullable=False, default="user")
+    document_types = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=_UTCNOW)
     updated_at = db.Column(
         db.DateTime(timezone=True),
@@ -35,6 +36,7 @@ class User(db.Model):
             "full_name": self.full_name(),
             "status": self.status,
             "user_type": self.user_type,
+            "document_types": self.document_types,
         }
 
     def active(self):
@@ -49,3 +51,12 @@ class User(db.Model):
     def soft_delete(self):
         self.status = "deleted"
         db.session.commit()
+
+    def allowed_document_types(self, configured_types):
+        if self.document_types is None:
+            return configured_types
+        if not isinstance(self.document_types, list):
+            return configured_types
+        if not self.document_types:
+            return []
+        return [doc_type for doc_type in configured_types if doc_type in self.document_types]

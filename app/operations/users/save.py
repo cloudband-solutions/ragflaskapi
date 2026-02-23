@@ -18,6 +18,9 @@ class Save(Validator):
         password=None,
         password_confirmation=None,
         user=None,
+        user_type=None,
+        document_types=None,
+        allowed_document_types=None,
     ):
         super().__init__()
 
@@ -27,6 +30,9 @@ class Save(Validator):
         self.last_name = last_name
         self.password = password
         self.password_confirmation = password_confirmation
+        self.user_type = user_type
+        self.document_types = document_types
+        self.allowed_document_types = allowed_document_types or []
 
         self.payload = {
             "email": [],
@@ -46,6 +52,8 @@ class Save(Validator):
                     first_name=self.first_name,
                     last_name=self.last_name,
                     password_hash=build_password_hash(self.password),
+                    user_type=self.user_type or "user",
+                    document_types=self.document_types,
                 )
                 db.session.add(self.user)
             else:
@@ -55,6 +63,10 @@ class Save(Validator):
                     self.user.first_name = self.first_name
                 if self.last_name:
                     self.user.last_name = self.last_name
+                if self.user_type:
+                    self.user.user_type = self.user_type
+                if self.document_types is not None:
+                    self.user.document_types = self.document_types
 
             db.session.commit()
 
@@ -97,5 +109,20 @@ class Save(Validator):
                     self.payload["email"].append("already taken")
                 elif not EMAIL_REGEX.match(self.email):
                     self.payload["email"].append("invalid format")
+
+        if self.user_type and self.user_type not in {"user", "admin", "ops"}:
+            self.payload.setdefault("user_type", []).append("invalid type")
+
+        if self.document_types is not None:
+            if not isinstance(self.document_types, list):
+                self.payload.setdefault("document_types", []).append("must be a list")
+            else:
+                invalid = [
+                    item
+                    for item in self.document_types
+                    if item not in self.allowed_document_types
+                ]
+                if invalid:
+                    self.payload.setdefault("document_types", []).append("invalid values")
 
         self.count_errors()
