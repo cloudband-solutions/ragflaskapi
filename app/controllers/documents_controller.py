@@ -1,3 +1,5 @@
+from functools import wraps
+
 from flask import current_app, jsonify, request
 
 from app import db
@@ -60,6 +62,22 @@ def _available_document_types():
     return [row[0] for row in rows]
 
 
+def _authenticate_public_documents_enabled():
+    return str(
+        current_app.config.get("AUTHENTICATE_PUBLIC_DOCUMENTS", "false")
+    ).lower() in {"1", "true", "yes", "y"}
+
+
+def _maybe_authenticate_public_documents(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if _authenticate_public_documents_enabled():
+            return authenticate_user(authorize_active(func))(*args, **kwargs)
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 def public_index():
     documents_query = Document.query.order_by(Document.created_at.desc())
 
@@ -104,8 +122,7 @@ def public_document_types():
     return jsonify({"document_types": _available_document_types()})
 
 
-@authenticate_user
-@authorize_active
+@_maybe_authenticate_public_documents
 def index():
     documents_query = Document.query.order_by(Document.created_at.desc())
 

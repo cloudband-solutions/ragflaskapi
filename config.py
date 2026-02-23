@@ -72,4 +72,5 @@ class Config:
     OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
     OPENAI_INFERENCE_MODEL = os.getenv("OPENAI_INFERENCE_MODEL", "")
     USE_OPENAI = os.getenv("USE_OPENAI", "true")
+    AUTHENTICATE_PUBLIC_DOCUMENTS = os.getenv("AUTHENTICATE_PUBLIC_DOCUMENTS", "false")
     DOCUMENT_TYPES = _load_document_types()

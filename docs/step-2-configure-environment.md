@@ -40,11 +40,15 @@ AWS_SECRET_ACCESS_KEY=...
 AWS_S3_ENDPOINT=
 # Optional prefix inside the bucket:
 AWS_S3_PREFIX=
+AUTHENTICATE_PUBLIC_DOCUMENTS=false
 ```
 
 Storage adapter selection:
 - Test, development, and production use Amazon S3 via the AWS variables above.
 - In test, set `AWS_S3_ENDPOINT` to a LocalStack endpoint (e.g., `http://localhost:4566`).
+
+Document access:
+- Set `AUTHENTICATE_PUBLIC_DOCUMENTS=true` to require auth for `GET /documents`.
 
 If you prefer to keep Flask CLI variables separate, move `FLASK_APP` and
 `FLASK_ENV` into a `.flaskenv` file instead; it will be loaded as well.
