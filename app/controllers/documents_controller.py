@@ -7,6 +7,7 @@ from app.controllers.authenticated_controller import authenticate_user, authoriz
 from app.models.document import Document
 from app.models.document_embedding import DocumentEmbedding
 from app.operations.documents.save import Save as SaveDocument
+from app.operations.documents.enqueue_embedding import EnqueueEmbedding
 from app.storage import get_storage
 
 
@@ -32,6 +33,9 @@ def _public_document_payload(document, has_embeddings=False):
         "content_type": document.content_type,
         "size_bytes": document.size_bytes,
         "download_url": get_storage().url(document.storage_key),
+        "embedding_status": document.embedding_status,
+        "enqueue_error": document.enqueue_error,
+        "embedding_error": document.embedding_error,
         "has_embeddings": has_embeddings,
     }
 
@@ -90,6 +94,10 @@ def public_index():
     if document_type:
         documents_query = documents_query.filter_by(document_type=document_type)
 
+    embedding_status = request.args.get("embedding_status")
+    if embedding_status:
+        documents_query = documents_query.filter_by(embedding_status=embedding_status)
+
     page = request.args.get("page", type=int) or 1
     per_page = request.args.get("per_page", type=int) or ITEMS_PER_PAGE
     total = documents_query.count()
@@ -134,6 +142,10 @@ def index():
     document_type = request.args.get("document_type")
     if document_type:
         documents_query = documents_query.filter_by(document_type=document_type)
+
+    embedding_status = request.args.get("embedding_status")
+    if embedding_status:
+        documents_query = documents_query.filter_by(embedding_status=embedding_status)
 
     page = request.args.get("page", type=int) or 1
     per_page = request.args.get("per_page", type=int) or ITEMS_PER_PAGE
@@ -225,3 +237,19 @@ def delete(document_id):
     cmd.delete()
 
     return jsonify({"message": "ok"})
+
+
+@authenticate_user
+@authorize_active
+def retry_enqueue(document_id):
+    document = db.session.get(Document, document_id)
+    if document is None:
+        return jsonify({"message": "not found"}), 404
+    if document.embedding_status != "failed":
+        return (
+            jsonify({"message": "document is not in failed embedding status"}),
+            422,
+        )
+
+    EnqueueEmbedding(document=document).execute()
+    return jsonify(document.to_dict())

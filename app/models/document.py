@@ -17,6 +17,9 @@ class Document(db.Model):
     storage_provider = db.Column(db.String(50), nullable=False, default="s3")
     content_type = db.Column(db.String(255), nullable=True)
     size_bytes = db.Column(db.BigInteger, nullable=True)
+    embedding_status = db.Column(db.String(32), nullable=False, default="pending")
+    enqueue_error = db.Column(db.Text, nullable=True)
+    embedding_error = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=_UTCNOW)
     updated_at = db.Column(
         db.DateTime(timezone=True),
@@ -36,4 +39,7 @@ class Document(db.Model):
             "storage_provider": self.storage_provider,
             "content_type": self.content_type,
             "size_bytes": self.size_bytes,
+            "embedding_status": self.embedding_status,
+            "enqueue_error": self.enqueue_error,
+            "embedding_error": self.embedding_error,
         }

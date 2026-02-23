@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models.document import Document
 from app.operations.validator import Validator
+from app.operations.documents.enqueue_embedding import EnqueueEmbedding
 from app.storage import get_storage
 
 
@@ -109,6 +110,7 @@ class Save(Validator):
         try:
             db.session.add(self.document)
             db.session.commit()
+            self._enqueue_embedding(self.document)
         except IntegrityError:
             db.session.rollback()
             storage.delete(storage_key)
@@ -141,6 +143,8 @@ class Save(Validator):
 
         try:
             db.session.commit()
+            if self.upload is not None:
+                self._enqueue_embedding(self.document)
             if old_storage_key:
                 storage.delete(old_storage_key)
         except IntegrityError:
@@ -167,3 +171,6 @@ class Save(Validator):
         self.payload["message"] = [message]
         self.message = message
         self.num_errors = 1
+
+    def _enqueue_embedding(self, document):
+        EnqueueEmbedding(document=document).execute()

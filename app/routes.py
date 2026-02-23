@@ -8,6 +8,7 @@ from app.controllers.documents_controller import (
     index as list_documents,
     public_document_types as public_document_types,
     public_index as public_list_documents,
+    retry_enqueue as retry_document_enqueue,
     show as show_document,
     update as update_document,
 )
@@ -43,6 +44,12 @@ def register_routes(app):
     )
     api_bp.add_url_rule(
         "/documents/<string:document_id>", view_func=delete_document, methods=["DELETE"], endpoint="documents_delete"
+    )
+    api_bp.add_url_rule(
+        "/documents/<string:document_id>/enqueue",
+        view_func=retry_document_enqueue,
+        methods=["POST"],
+        endpoint="documents_enqueue",
     )
     api_bp.add_url_rule("/inquire", view_func=inquire, methods=["POST"], endpoint="inquire")
 

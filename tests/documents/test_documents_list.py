@@ -45,3 +45,28 @@ def test_public_document_types_only_includes_available(client):
     response = client.get("/public/document_types")
     assert response.status_code == 200
     assert response.json["document_types"] == ["audit_report", "national_budget"]
+
+
+def test_list_documents_filter_by_embedding_status(client, auth_headers):
+    embedded = DocumentFactory(embedding_status="embedded")
+    DocumentFactory(embedding_status="pending")
+    DocumentFactory(embedding_status="failed")
+
+    response = client.get(
+        "/documents?embedding_status=embedded", headers=auth_headers
+    )
+    assert response.status_code == 200
+    records = response.json["records"]
+    assert len(records) == 1
+    assert records[0]["id"] == embedded.id
+
+
+def test_public_list_documents_filter_by_embedding_status(client):
+    embedded = DocumentFactory(embedding_status="embedded")
+    DocumentFactory(embedding_status="pending")
+
+    response = client.get("/public/documents?embedding_status=embedded")
+    assert response.status_code == 200
+    records = response.json["records"]
+    assert len(records) == 1
+    assert records[0]["id"] == embedded.id

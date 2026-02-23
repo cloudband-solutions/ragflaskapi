@@ -64,6 +64,9 @@ Storage adapter selection:
 Document access:
 - Set `AUTHENTICATE_PUBLIC_DOCUMENTS=true` to require auth for `GET /documents`.
 
+Embedding queue:
+- Documents enqueue embedding jobs to SQS. Ensure `SQS_QUEUE_URL` is configured.
+
 If you prefer to keep Flask CLI variables separate, move `FLASK_APP` and
 `FLASK_ENV` into a `.flaskenv` file instead; it will be loaded as well.
 

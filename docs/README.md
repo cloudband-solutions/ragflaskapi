@@ -12,6 +12,7 @@ Setup path in order, then jump to Development.
 1. [Run the server](development/run-server.md)
 2. [Tests](development/tests.md)
 3. [Command-line routines (Flask CLI)](development/cli.md)
+4. [Embedding workflow](development/embeddings.md)
 
 ## Production and Deployment
 1. [Run with Gunicorn](production/gunicorn.md)

@@ -75,10 +75,17 @@ Optional SQS variables:
 
 Payload formats accepted:
 - `{ "bucket": "my-bucket", "key": "path/to/file.pdf" }`
+- `{ "document_id": "<uuid>", "name": "Title", "key": "path/to/file.pdf" }`
 - S3 event payloads in `Records[0].s3.bucket.name` and `Records[0].s3.object.key`
 
 If `--embedder auto` and `USE_OPENAI=true`, OpenAI will be used; otherwise the
 local GGUF embedder will be used.
+
+When processing a `document_id` payload, the worker updates `embedding_status`
+to `processing`, then `embedded` on success or `failed` on error. Embedding
+errors are stored in `embedding_error`.
+
+Documents also track `enqueue_error` when a job could not be sent to SQS.
 
 ## Template for new commands
 Add a command group and subcommand in `app/cli.py`:

@@ -282,10 +282,20 @@ def _get_or_create_document_from_payload(payload, storage_key, content_type, siz
         storage_provider="s3",
         content_type=content_type,
         size_bytes=size_bytes,
+        embedding_status="pending",
     )
     db.session.add(document)
     db.session.commit()
     return document
+
+
+def _set_document_status(document, status, enqueue_error=None, embedding_error=None):
+    document.embedding_status = status
+    if enqueue_error is not None:
+        document.enqueue_error = enqueue_error
+    if embedding_error is not None:
+        document.embedding_error = embedding_error
+    db.session.commit()
 
 
 def register_cli(app):
@@ -443,59 +453,91 @@ def register_cli(app):
 
                 for message in messages:
                     payload = _parse_payload(message.get("Body", "{}"))
-                    bucket, key = _extract_s3_location(payload)
-                    if not bucket or not key:
-                        click.echo("Skipping message: payload missing S3 bucket/key.")
-                        continue
+                    try:
+                        document = None
+                        bucket = None
+                        key = None
 
-                    configured_bucket = current_app.config.get("AWS_S3_BUCKET") or os.getenv(
-                        "AWS_S3_BUCKET"
-                    )
-                    if configured_bucket and bucket != configured_bucket:
-                        click.echo(
-                            "Skipping message: payload bucket does not match AWS_S3_BUCKET."
+                        if isinstance(payload, dict) and payload.get("document_id"):
+                            document = db.session.get(Document, payload["document_id"])
+                            if document is None:
+                                click.echo("Skipping message: document not found.")
+                                continue
+                            key = payload.get("key") or document.storage_key
+                            bucket = payload.get("bucket") or current_app.config.get(
+                                "AWS_S3_BUCKET"
+                            ) or os.getenv("AWS_S3_BUCKET")
+                            if not key or not bucket:
+                                click.echo("Skipping message: missing bucket/key for document.")
+                                continue
+                        else:
+                            bucket, key = _extract_s3_location(payload)
+                            if not bucket or not key:
+                                click.echo("Skipping message: payload missing S3 bucket/key.")
+                                continue
+
+                        configured_bucket = current_app.config.get("AWS_S3_BUCKET") or os.getenv(
+                            "AWS_S3_BUCKET"
                         )
-                        continue
+                        if configured_bucket and bucket != configured_bucket:
+                            click.echo(
+                                "Skipping message: payload bucket does not match AWS_S3_BUCKET."
+                            )
+                            continue
 
-                    key = unquote_plus(key)
-                    click.echo(f"Downloading s3://{bucket}/{key} ...")
-                    s3 = _build_s3_client()
-                    obj = s3.get_object(Bucket=bucket, Key=key)
-                    data = obj["Body"].read()
-                    content_type = obj.get("ContentType")
-                    size_bytes = obj.get("ContentLength")
+                        key = unquote_plus(key)
+                        click.echo(f"Downloading s3://{bucket}/{key} ...")
+                        s3 = _build_s3_client()
+                        obj = s3.get_object(Bucket=bucket, Key=key)
+                        data = obj["Body"].read()
+                        content_type = obj.get("ContentType")
+                        size_bytes = obj.get("ContentLength")
 
-                    document = _get_or_create_document_from_payload(
-                        payload, key, content_type, size_bytes
-                    )
+                        if document is None:
+                            document = _get_or_create_document_from_payload(
+                                payload, key, content_type, size_bytes
+                            )
 
-                    if embedder.lower() == "openai":
-                        client, model = _openai_client_and_model()
-                        embedder_config = {"type": "openai", "client": client, "model": model}
-                    elif embedder.lower() == "local":
-                        embedder_config = {"type": "local", "llm": _local_embedder()}
-                    else:
-                        use_openai = str(current_app.config.get("USE_OPENAI", "true")).lower()
-                        if use_openai in {"1", "true", "yes", "y"}:
+                        _set_document_status(document, "processing", embedding_error=None)
+
+                        if embedder.lower() == "openai":
                             client, model = _openai_client_and_model()
                             embedder_config = {"type": "openai", "client": client, "model": model}
-                        else:
+                        elif embedder.lower() == "local":
                             embedder_config = {"type": "local", "llm": _local_embedder()}
+                        else:
+                            use_openai = str(current_app.config.get("USE_OPENAI", "true")).lower()
+                            if use_openai in {"1", "true", "yes", "y"}:
+                                client, model = _openai_client_and_model()
+                                embedder_config = {"type": "openai", "client": client, "model": model}
+                            else:
+                                embedder_config = {"type": "local", "llm": _local_embedder()}
 
-                    _embed_document_from_bytes(
-                        document,
-                        data,
-                        chunk_size,
-                        chunk_overlap,
-                        embedder_config,
-                        metadata=payload.get("metadata") if isinstance(payload, dict) else None,
-                    )
-
-                    if delete_message:
-                        sqs.delete_message(
-                            QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"]
+                        _embed_document_from_bytes(
+                            document,
+                            data,
+                            chunk_size,
+                            chunk_overlap,
+                            embedder_config,
+                            metadata=payload.get("metadata") if isinstance(payload, dict) else None,
                         )
-                        click.echo("Deleted SQS message.")
+
+                        _set_document_status(
+                            document,
+                            "embedded",
+                            enqueue_error=None,
+                            embedding_error=None,
+                        )
+
+                        if delete_message:
+                            sqs.delete_message(
+                                QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"]
+                            )
+                            click.echo("Deleted SQS message.")
+                    except Exception as exc:  # noqa: BLE001 - keep worker running
+                        if "document" in locals() and document is not None:
+                            _set_document_status(document, "failed", embedding_error=str(exc))
+                        click.echo(f"Embedding failed: {exc}")
         except KeyboardInterrupt:
             click.echo("Shutting down SQS poller.")
 
