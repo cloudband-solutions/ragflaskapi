@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 from app.controllers.health_controller import health
-from app.controllers.system_controller import login as login_user
+from app.controllers.system_controller import environment as system_environment, login as login_user
 from app.controllers.documents_controller import (
     create as create_document,
     delete as delete_document,
@@ -25,6 +25,12 @@ def register_routes(app):
     api_bp = Blueprint("/", __name__)
     api_bp.add_url_rule("/health", view_func=health, methods=["GET"], endpoint="health")
     api_bp.add_url_rule("/login", view_func=login_user, methods=["POST"], endpoint="login")
+    api_bp.add_url_rule(
+        "/system/env",
+        view_func=system_environment,
+        methods=["GET"],
+        endpoint="system_env",
+    )
     api_bp.add_url_rule("/users", view_func=list_users, methods=["GET"], endpoint="users_index")
     api_bp.add_url_rule("/users", view_func=create_user, methods=["POST"], endpoint="users_create")
     api_bp.add_url_rule("/users/<string:user_id>", view_func=show_user, methods=["GET"], endpoint="users_show")
