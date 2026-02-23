@@ -107,6 +107,7 @@ Required environment variables (worker):
 Optional:
 - `AWS_SQS_ENDPOINT` (e.g., localstack)
 - `SQS_REGION` (defaults to `AWS_REGION`)
+ - `--queue-url <sqs-url>` overrides `SQS_QUEUE_URL`
 
 ### OpenAI embeddings
 
@@ -119,7 +120,7 @@ Optional:
 
 Run the worker:
 ```bash
-flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url> --embedder openai
+flask --app wsgi.py system process-sqs-embedding --embedder openai
 ```
 
 ### Local (GGUF) embeddings
@@ -134,7 +135,7 @@ Optional:
 
 Run the worker:
 ```bash
-flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url> --embedder local
+flask --app wsgi.py system process-sqs-embedding --embedder local
 ```
 
 ## Docker Compose (foreground)

@@ -68,10 +68,11 @@ creates the `documents` record when needed, and writes embeddings. Press
 `Ctrl+C` to stop.
 
 ```bash
-flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url>
+flask --app wsgi.py system process-sqs-embedding
 ```
 
 Optional flags:
+- `--queue-url <sqs-url>` (overrides `SQS_QUEUE_URL`)
 - `--embedder auto|openai|local` (default `auto`)
 - `--wait-time <seconds>` (default `10`)
 - `--visibility-timeout <seconds>` (default `120`)
