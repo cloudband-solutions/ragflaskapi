@@ -1,4 +1,4 @@
-# 4) Run with Gunicorn
+# Run with Gunicorn
 ```bash
 gunicorn wsgi:app
 ```

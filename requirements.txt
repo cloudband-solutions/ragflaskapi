@@ -17,3 +17,4 @@ pypdf
 tiktoken
 openpyxl
 python-pptx
+llama-cpp-python

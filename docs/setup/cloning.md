@@ -1,12 +1,12 @@
-# 1) Create a new project from this codebase
+# Cloning and project naming
 
-## 1.1 Copy the repository
+## Copy the repository
 ```bash
 cp -R /home/ralampay/workspace/cloudband/default_api_flask /home/ralampay/workspace/cloudband/ragapi
 cd /home/ralampay/workspace/cloudband/ragapi
 ```
 
-## 1.2 Update the project naming defaults
+## Update the project naming defaults
 Search and replace the default name with your new one:
 ```bash
 rg -n "default_flask_api|default-flask-api|Default Flask API"

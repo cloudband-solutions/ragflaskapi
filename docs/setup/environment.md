@@ -1,13 +1,13 @@
-# 2) Configure the environment
+# Environment and dotenv configuration
 
-## 2.1 Create a virtual environment and install dependencies
+## Create a virtual environment and install dependencies
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 2.2 Configure dotenv (.env)
+## Configure dotenv (.env)
 This project uses `python-dotenv`. Variables in `.env` (and `.flaskenv` if you
 choose to add one) are loaded automatically when the app starts.
 
@@ -41,6 +41,20 @@ AWS_S3_ENDPOINT=
 # Optional prefix inside the bucket:
 AWS_S3_PREFIX=
 AUTHENTICATE_PUBLIC_DOCUMENTS=false
+# SQS embedding worker
+SQS_QUEUE_URL=
+# Optional SQS endpoint (e.g. localstack):
+AWS_SQS_ENDPOINT=
+SQS_REGION=
+# Local embedding model (GGUF)
+LOCAL_EMBEDDING_MODEL_PATH=
+LOCAL_EMBEDDING_N_CTX=2048
+LOCAL_EMBEDDING_N_THREADS=4
+LOCAL_EMBEDDING_N_BATCH=64
+# OpenAI embeddings
+OPENAI_API_KEY=
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+USE_OPENAI=true
 ```
 
 Storage adapter selection:

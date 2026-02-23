@@ -1,16 +1,16 @@
-# 5) Database setup and migrations (Flask-Migrate)
+# Database setup and migrations (Flask-Migrate)
 
-## 5.1 Create the database
+## Create the database
 ```bash
 flask db create
 ```
 
-## 5.2 Initialize migrations (first time only)
+## Initialize migrations (first time only)
 ```bash
 flask db init
 ```
 
-## 5.3 Generate and apply migrations
+## Generate and apply migrations
 ```bash
 flask db migrate -m "init"
 flask db upgrade

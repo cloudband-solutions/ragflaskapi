@@ -1,4 +1,4 @@
-# 3) Run the server
+# Run the server
 ```bash
 flask run
 ```

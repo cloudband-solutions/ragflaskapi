@@ -1,21 +1,25 @@
 # Documentation
 
 Use this index to learn the codebase quickly. If you are new, follow the
-Getting Started path in order.
+Setup path in order, then jump to Development.
 
-## Getting started path
-1) [Create a new project from this codebase](step-1-create-project.md)
-2) [Configure the environment](step-2-configure-environment.md)
-3) [Run the server](step-3-run-server.md)
-4) [Run with Gunicorn](step-4-gunicorn.md)
-5) [Database setup and migrations (Flask-Migrate)](step-5-database-migrations.md)
-6) [Tests](step-6-tests.md)
-7) [Command-line routines (Flask CLI)](step-7-cli.md)
+## Setup
+1. [Cloning and project naming](setup/cloning.md)
+2. [Environment and dotenv configuration](setup/environment.md)
+3. [Database setup and migrations](setup/database.md)
 
-## Build and extend
-8) [Create a new model (example: Project)](step-8-create-model.md)
-9) [Create a controller (example: Project)](step-9-create-controller.md)
+## Development
+1. [Run the server](development/run-server.md)
+2. [Tests](development/tests.md)
+3. [Command-line routines (Flask CLI)](development/cli.md)
 
-## Examples and references
-- [Example test stubs](example-test-stubs.md)
-- [Controller example](example-controller.md)
+## Production and Deployment
+1. [Run with Gunicorn](production/gunicorn.md)
+
+## Build and Extend
+1. [Create a new model (example: Project)](build/create-model.md)
+2. [Create a controller (example: Project)](build/create-controller.md)
+
+## Examples and References
+- [Example test stubs](examples/test-stubs.md)
+- [Controller example](examples/controller.md)
