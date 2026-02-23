@@ -43,6 +43,10 @@ AWS_S3_PREFIX=
 AUTHENTICATE_PUBLIC_DOCUMENTS=false
 # SQS embedding worker
 SQS_QUEUE_URL=
+# Required for FIFO queues:
+SQS_MESSAGE_GROUP_ID=embeddings
+# Optional FIFO override (otherwise a UUID is generated):
+SQS_MESSAGE_DEDUPLICATION_ID=
 # Optional SQS endpoint (e.g. localstack):
 AWS_SQS_ENDPOINT=
 SQS_REGION=

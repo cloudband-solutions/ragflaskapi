@@ -91,6 +91,8 @@ Required environment variables:
 Optional SQS variables:
 - `AWS_SQS_ENDPOINT` (for localstack)
 - `SQS_REGION` (falls back to `AWS_REGION`)
+- `SQS_MESSAGE_GROUP_ID` (required for FIFO queues)
+- `SQS_MESSAGE_DEDUPLICATION_ID` (optional FIFO override; otherwise a UUID is used)
 
 Payload formats accepted:
 - `{ "bucket": "my-bucket", "key": "path/to/file.pdf" }`

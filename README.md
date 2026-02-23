@@ -107,7 +107,8 @@ Required environment variables (worker):
 Optional:
 - `AWS_SQS_ENDPOINT` (e.g., localstack)
 - `SQS_REGION` (defaults to `AWS_REGION`)
- - `--queue-url <sqs-url>` overrides `SQS_QUEUE_URL`
+- `--queue-url <sqs-url>` overrides `SQS_QUEUE_URL`
+- For FIFO queues: set `SQS_MESSAGE_GROUP_ID` (and optionally `SQS_MESSAGE_DEDUPLICATION_ID`)
 
 ### OpenAI embeddings
 

@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 
 import boto3
 from flask import current_app
@@ -25,7 +26,22 @@ class EnqueueEmbedding:
 
         try:
             client = self._build_sqs_client()
-            client.send_message(QueueUrl=queue_url, MessageBody=json.dumps(payload))
+            send_kwargs = {"QueueUrl": queue_url, "MessageBody": json.dumps(payload)}
+            if queue_url.endswith(".fifo"):
+                group_id = (
+                    current_app.config.get("SQS_MESSAGE_GROUP_ID")
+                    or os.getenv("SQS_MESSAGE_GROUP_ID")
+                    or "embeddings"
+                )
+                send_kwargs["MessageGroupId"] = group_id
+                dedup_id = (
+                    current_app.config.get("SQS_MESSAGE_DEDUPLICATION_ID")
+                    or os.getenv("SQS_MESSAGE_DEDUPLICATION_ID")
+                )
+                if not dedup_id:
+                    dedup_id = f"{self.document.id}-{uuid.uuid4()}"
+                send_kwargs["MessageDeduplicationId"] = dedup_id
+            client.send_message(**send_kwargs)
             self.document.embedding_status = "pending"
             self.document.enqueue_error = None
             self.document.embedding_error = None
