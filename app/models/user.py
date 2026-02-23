@@ -14,6 +14,7 @@ class User(db.Model):
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), nullable=False, default="pending")
+    user_type = db.Column(db.String(50), nullable=False, default="user")
     created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=_UTCNOW)
     updated_at = db.Column(
         db.DateTime(timezone=True),
@@ -33,6 +34,7 @@ class User(db.Model):
             "last_name": self.last_name,
             "full_name": self.full_name(),
             "status": self.status,
+            "user_type": self.user_type,
         }
 
     def active(self):

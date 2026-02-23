@@ -3,7 +3,11 @@ from functools import wraps
 from flask import current_app, jsonify, request
 
 from app import db
-from app.controllers.authenticated_controller import authenticate_user, authorize_active
+from app.controllers.authenticated_controller import (
+    authenticate_user,
+    authorize_active,
+    authorize_admin,
+)
 from app.models.document import Document
 from app.models.document_embedding import DocumentEmbedding
 from app.operations.documents.save import Save as SaveDocument
@@ -186,6 +190,7 @@ def show(document_id):
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def create():
     payload = _get_payload()
     cmd = SaveDocument(
@@ -203,6 +208,7 @@ def create():
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def update(document_id):
     document = db.session.get(Document, document_id)
     if document is None:
@@ -228,6 +234,7 @@ def update(document_id):
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def delete(document_id):
     document = db.session.get(Document, document_id)
     if document is None:
@@ -241,6 +248,7 @@ def delete(document_id):
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def retry_enqueue(document_id):
     document = db.session.get(Document, document_id)
     if document is None:

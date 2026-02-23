@@ -40,3 +40,14 @@ def authorize_active(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def authorize_admin(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        user = getattr(g, "current_user", None)
+        if user is None or user.user_type != "admin":
+            return jsonify({"message": "admin required"}), 403
+        return func(*args, **kwargs)
+
+    return wrapper

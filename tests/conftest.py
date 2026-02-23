@@ -32,6 +32,13 @@ def client(app):
 
 @pytest.fixture()
 def auth_headers():
-    user = UserFactory()
+    user = UserFactory(user_type="admin")
+    token = generate_jwt(user.to_dict())
+    return build_jwt_header(token)
+
+
+@pytest.fixture()
+def user_headers():
+    user = UserFactory(user_type="user")
     token = generate_jwt(user.to_dict())
     return build_jwt_header(token)

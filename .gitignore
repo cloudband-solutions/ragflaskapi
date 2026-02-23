@@ -16,6 +16,7 @@ env/
 ENV/
 .env
 .env.*
+!.env.dist
 document_types.yaml
 
 .ipynb_checkpoints/

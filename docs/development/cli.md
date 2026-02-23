@@ -8,6 +8,24 @@ via `register_cli(app)` inside `create_app`.
 flask --app wsgi.py system greet
 ```
 
+## Create the default admin user
+Creates an admin user with the default credentials (or update it with `--force`).
+
+```bash
+flask --app wsgi.py system create-admin
+```
+
+Default options:
+- `--email admin@example.com`
+- `--password password`
+- `--first-name Test`
+- `--last-name Admin`
+
+To update an existing admin user (same email), pass `--force`:
+```bash
+flask --app wsgi.py system create-admin --force
+```
+
 ## Embed a document with OpenAI
 This command downloads a document from storage and writes embeddings into
 `document_embeddings`.

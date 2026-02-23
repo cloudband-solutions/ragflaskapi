@@ -334,6 +334,7 @@ def register_cli(app):
                 last_name=last_name,
                 password_hash=build_password_hash(password),
                 status="active",
+                user_type="admin",
             )
             db.session.add(user)
             db.session.commit()
@@ -344,6 +345,7 @@ def register_cli(app):
         user.last_name = last_name
         user.password_hash = build_password_hash(password)
         user.status = "active"
+        user.user_type = "admin"
         db.session.commit()
         click.echo("Admin user updated.")
 

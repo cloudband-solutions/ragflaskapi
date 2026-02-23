@@ -2,7 +2,11 @@ from flask import jsonify, request
 from sqlalchemy import or_
 
 from app import db
-from app.controllers.authenticated_controller import authenticate_user, authorize_active
+from app.controllers.authenticated_controller import (
+    authenticate_user,
+    authorize_active,
+    authorize_admin,
+)
 from app.models.user import User
 from app.operations.users.save import Save as SaveUser
 
@@ -21,6 +25,7 @@ def _get_payload():
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def index():
     users_query = User.query.order_by(User.last_name.asc())
 
@@ -65,6 +70,7 @@ def index():
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def show(user_id):
     user = db.session.get(User, user_id)
     if user is None:
@@ -74,6 +80,7 @@ def show(user_id):
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def create():
     payload = _get_payload()
     cmd = SaveUser(
@@ -92,6 +99,7 @@ def create():
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def update(user_id):
     user = db.session.get(User, user_id)
     if user is None:
@@ -115,6 +123,7 @@ def update(user_id):
 
 @authenticate_user
 @authorize_active
+@authorize_admin
 def delete(user_id):
     user = db.session.get(User, user_id)
     if user is None:

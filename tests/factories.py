@@ -17,6 +17,7 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
     last_name = factory.Sequence(lambda n: f"Last{n}")
     password_hash = factory.LazyFunction(lambda: generate_password_hash("password"))
     status = "active"
+    user_type = "user"
 
 
 class DocumentFactory(factory.alchemy.SQLAlchemyModelFactory):
