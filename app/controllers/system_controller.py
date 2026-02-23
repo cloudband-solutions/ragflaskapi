@@ -23,6 +23,7 @@ def environment():
     safe_keys = [
         "FLASK_ENV",
         "AUTHENTICATE_PUBLIC_DOCUMENTS",
+        "DOCUMENT_TYPES_CONFIG",
         "AWS_REGION",
         "AWS_S3_BUCKET",
         "AWS_S3_ENDPOINT",

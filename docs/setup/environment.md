@@ -55,6 +55,8 @@ LOCAL_EMBEDDING_N_BATCH=64
 OPENAI_API_KEY=
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 USE_OPENAI=true
+# Document types configuration
+# DOCUMENT_TYPES_CONFIG=document_types.yaml
 ```
 
 Storage adapter selection:
@@ -69,6 +71,26 @@ Embedding queue:
 
 If you prefer to keep Flask CLI variables separate, move `FLASK_APP` and
 `FLASK_ENV` into a `.flaskenv` file instead; it will be loaded as well.
+
+Document types configuration:
+- Set `DOCUMENT_TYPES_CONFIG` to the path of a YAML file that defines allowed types.
+- The YAML can be either a list or a dict with a `document_types` key.
+- If the file is missing or invalid, the app falls back to built-in defaults.
+
+Example `document_types.yaml` (list):
+```yaml
+- national_budget
+- agency_budget
+- audit_report
+```
+
+Example `document_types.yaml` (dict):
+```yaml
+document_types:
+  - national_budget
+  - agency_budget
+  - audit_report
+```
 
 The database config in `database.yaml` uses these environment variables:
 ```yaml

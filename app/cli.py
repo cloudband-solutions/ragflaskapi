@@ -349,6 +349,46 @@ def register_cli(app):
         db.session.commit()
         click.echo("Admin user updated.")
 
+    @system.command("create-user")
+    @click.option("--email", default="user@example.com", show_default=True)
+    @click.option("--password", default="password", show_default=True)
+    @click.option("--first-name", default="Sample", show_default=True)
+    @click.option("--last-name", default="User", show_default=True)
+    @click.option(
+        "--force",
+        is_flag=True,
+        help="Update existing user if the email already exists.",
+    )
+    @with_appcontext
+    def create_user(email, password, first_name, last_name, force):
+        """Create a default sample user."""
+        user = User.query.filter_by(email=email).first()
+        if user is not None and not force:
+            click.echo("User already exists. Use --force to update it.")
+            return
+
+        if user is None:
+            user = User(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password_hash=build_password_hash(password),
+                status="active",
+                user_type="user",
+            )
+            db.session.add(user)
+            db.session.commit()
+            click.echo("User created.")
+            return
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.password_hash = build_password_hash(password)
+        user.status = "active"
+        user.user_type = "user"
+        db.session.commit()
+        click.echo("User updated.")
+
     @system.command("openai-embed-document")
     @click.option("--document-id", required=True)
     @click.option("--chunk-size", default=DEFAULT_CHUNK_TOKENS, show_default=True, type=int)

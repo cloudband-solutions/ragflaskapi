@@ -5,6 +5,7 @@ from app.controllers.system_controller import environment as system_environment,
 from app.controllers.documents_controller import (
     create as create_document,
     delete as delete_document,
+    document_types as document_types,
     index as list_documents,
     public_document_types as public_document_types,
     public_index as public_list_documents,
@@ -40,6 +41,9 @@ def register_routes(app):
     api_bp.add_url_rule("/public/documents", view_func=public_list_documents, methods=["GET"], endpoint="public_documents_index")
     api_bp.add_url_rule(
         "/public/document_types", view_func=public_document_types, methods=["GET"], endpoint="public_document_types"
+    )
+    api_bp.add_url_rule(
+        "/documents/types", view_func=document_types, methods=["GET"], endpoint="documents_types"
     )
     api_bp.add_url_rule("/documents", view_func=create_document, methods=["POST"], endpoint="documents_create")
     api_bp.add_url_rule(

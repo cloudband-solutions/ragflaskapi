@@ -58,14 +58,14 @@ def _document_embedding_ids(documents):
 
 
 def _available_document_types():
-    allowed_types = set(current_app.config.get("DOCUMENT_TYPES") or [])
+    allowed_types = current_app.config.get("DOCUMENT_TYPES") or []
+    if allowed_types:
+        return sorted(set(allowed_types))
     query = (
         db.session.query(Document.document_type)
         .filter(Document.document_type.isnot(None))
         .filter(Document.document_type != "")
     )
-    if allowed_types:
-        query = query.filter(Document.document_type.in_(allowed_types))
     rows = query.distinct().order_by(Document.document_type.asc()).all()
     return [row[0] for row in rows]
 
@@ -131,6 +131,13 @@ def public_index():
 
 
 def public_document_types():
+    return jsonify({"document_types": _available_document_types()})
+
+
+@authenticate_user
+@authorize_active
+@authorize_admin
+def document_types():
     return jsonify({"document_types": _available_document_types()})
 
 
