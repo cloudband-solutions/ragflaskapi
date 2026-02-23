@@ -44,9 +44,10 @@ Optional local tuning variables:
 - `LOCAL_EMBEDDING_N_THREADS` (default `4`)
 - `LOCAL_EMBEDDING_N_BATCH` (default `64`)
 
-## Process one SQS embedding job
-Fetches a single message, downloads the referenced S3 object, creates the
-`documents` record when needed, and writes embeddings.
+## Process SQS embedding jobs (continuous)
+Runs as a long-lived process that polls SQS, downloads referenced S3 objects,
+creates the `documents` record when needed, and writes embeddings. Press
+`Ctrl+C` to stop.
 
 ```bash
 flask --app wsgi.py system process-sqs-embedding --queue-url <sqs-url>
@@ -57,6 +58,7 @@ Optional flags:
 - `--wait-time <seconds>` (default `10`)
 - `--visibility-timeout <seconds>` (default `120`)
 - `--delete-message/--no-delete-message` (default `--delete-message`)
+- `--max-messages <count>` (default `1`, max `10`)
 - `--chunk-size <tokens>` (default `800`)
 - `--chunk-overlap <tokens>` (default `100`)
 

@@ -394,6 +394,7 @@ def register_cli(app):
     @click.option("--wait-time", default=DEFAULT_SQS_WAIT_TIME, show_default=True, type=int)
     @click.option("--visibility-timeout", default=120, show_default=True, type=int)
     @click.option("--delete-message/--no-delete-message", default=True, show_default=True)
+    @click.option("--max-messages", default=1, show_default=True, type=int)
     @click.option(
         "--embedder",
         type=click.Choice(["auto", "openai", "local"], case_sensitive=False),
@@ -410,83 +411,93 @@ def register_cli(app):
         wait_time,
         visibility_timeout,
         delete_message,
+        max_messages,
         embedder,
         chunk_size,
         chunk_overlap,
     ):
-        """Fetch one SQS job and embed the referenced document."""
+        """Poll SQS jobs and embed referenced documents."""
         _validate_chunking_options(chunk_size, chunk_overlap)
         queue_url = queue_url or current_app.config.get("SQS_QUEUE_URL") or os.getenv(
             "SQS_QUEUE_URL"
         )
         if not queue_url:
             raise click.ClickException("SQS_QUEUE_URL is required.")
+        if max_messages <= 0 or max_messages > 10:
+            raise click.ClickException("--max-messages must be between 1 and 10.")
 
         sqs = _build_sqs_client()
-        response = sqs.receive_message(
-            QueueUrl=queue_url,
-            MaxNumberOfMessages=1,
-            WaitTimeSeconds=wait_time,
-            VisibilityTimeout=visibility_timeout,
-        )
-        messages = response.get("Messages") or []
-        if not messages:
-            click.echo("No messages available.")
-            return
+        click.echo("Polling SQS. Press Ctrl+C to stop.")
 
-        message = messages[0]
-        payload = _parse_payload(message.get("Body", "{}"))
-        bucket, key = _extract_s3_location(payload)
-        if not bucket or not key:
-            raise click.ClickException("Payload missing S3 bucket/key.")
+        try:
+            while True:
+                response = sqs.receive_message(
+                    QueueUrl=queue_url,
+                    MaxNumberOfMessages=max_messages,
+                    WaitTimeSeconds=wait_time,
+                    VisibilityTimeout=visibility_timeout,
+                )
+                messages = response.get("Messages") or []
+                if not messages:
+                    continue
 
-        configured_bucket = current_app.config.get("AWS_S3_BUCKET") or os.getenv(
-            "AWS_S3_BUCKET"
-        )
-        if configured_bucket and bucket != configured_bucket:
-            raise click.ClickException(
-                "Payload bucket does not match AWS_S3_BUCKET; cannot store document."
-            )
+                for message in messages:
+                    payload = _parse_payload(message.get("Body", "{}"))
+                    bucket, key = _extract_s3_location(payload)
+                    if not bucket or not key:
+                        click.echo("Skipping message: payload missing S3 bucket/key.")
+                        continue
 
-        key = unquote_plus(key)
-        click.echo(f"Downloading s3://{bucket}/{key} ...")
-        s3 = _build_s3_client()
-        obj = s3.get_object(Bucket=bucket, Key=key)
-        data = obj["Body"].read()
-        content_type = obj.get("ContentType")
-        size_bytes = obj.get("ContentLength")
+                    configured_bucket = current_app.config.get("AWS_S3_BUCKET") or os.getenv(
+                        "AWS_S3_BUCKET"
+                    )
+                    if configured_bucket and bucket != configured_bucket:
+                        click.echo(
+                            "Skipping message: payload bucket does not match AWS_S3_BUCKET."
+                        )
+                        continue
 
-        document = _get_or_create_document_from_payload(
-            payload, key, content_type, size_bytes
-        )
+                    key = unquote_plus(key)
+                    click.echo(f"Downloading s3://{bucket}/{key} ...")
+                    s3 = _build_s3_client()
+                    obj = s3.get_object(Bucket=bucket, Key=key)
+                    data = obj["Body"].read()
+                    content_type = obj.get("ContentType")
+                    size_bytes = obj.get("ContentLength")
 
-        if embedder.lower() == "openai":
-            client, model = _openai_client_and_model()
-            embedder_config = {"type": "openai", "client": client, "model": model}
-        elif embedder.lower() == "local":
-            embedder_config = {"type": "local", "llm": _local_embedder()}
-        else:
-            use_openai = str(current_app.config.get("USE_OPENAI", "true")).lower()
-            if use_openai in {"1", "true", "yes", "y"}:
-                client, model = _openai_client_and_model()
-                embedder_config = {"type": "openai", "client": client, "model": model}
-            else:
-                embedder_config = {"type": "local", "llm": _local_embedder()}
+                    document = _get_or_create_document_from_payload(
+                        payload, key, content_type, size_bytes
+                    )
 
-        _embed_document_from_bytes(
-            document,
-            data,
-            chunk_size,
-            chunk_overlap,
-            embedder_config,
-            metadata=payload.get("metadata") if isinstance(payload, dict) else None,
-        )
+                    if embedder.lower() == "openai":
+                        client, model = _openai_client_and_model()
+                        embedder_config = {"type": "openai", "client": client, "model": model}
+                    elif embedder.lower() == "local":
+                        embedder_config = {"type": "local", "llm": _local_embedder()}
+                    else:
+                        use_openai = str(current_app.config.get("USE_OPENAI", "true")).lower()
+                        if use_openai in {"1", "true", "yes", "y"}:
+                            client, model = _openai_client_and_model()
+                            embedder_config = {"type": "openai", "client": client, "model": model}
+                        else:
+                            embedder_config = {"type": "local", "llm": _local_embedder()}
 
-        if delete_message:
-            sqs.delete_message(
-                QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"]
-            )
-            click.echo("Deleted SQS message.")
+                    _embed_document_from_bytes(
+                        document,
+                        data,
+                        chunk_size,
+                        chunk_overlap,
+                        embedder_config,
+                        metadata=payload.get("metadata") if isinstance(payload, dict) else None,
+                    )
+
+                    if delete_message:
+                        sqs.delete_message(
+                            QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"]
+                        )
+                        click.echo("Deleted SQS message.")
+        except KeyboardInterrupt:
+            click.echo("Shutting down SQS poller.")
 
 
 def _quote_identifier(name):
